@@ -1,0 +1,75 @@
+# Build directory
+/build/
+
+# CMake files
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+CTestTestfile.cmake
+Testing/
+
+# Generated build artifacts
+*.o
+*.obj
+*.so
+*.a
+*.dylib
+*.exe
+*.dll
+*.out
+
+# Debug/Release folders
+/Debug/
+/Release/
+
+# IDE/editor settings
+.vscode/
+.idea/
+*.suo
+*.user
+*.iml
+
+# Temporary files
+*~
+*.swp
+*.tmp
+*.log
+*.temp
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+
+# Coverage and profiling
+coverage/
+*.gcno
+*.gcda
+*.gcov
+
+# Archives
+*.tar.gz
+*.zip
+
+# Third-party build outputs
+third_party/**/build/
+
+# Examples and demo outputs (built binaries)
+examples/**/CMakeFiles/
+examples/**/Makefile
+
+# Misc
+.vagrant/
+.env
+.env.*
+
+# Node modules (if any web tooling is added)
+node_modules/
+
+# Ignore local build artifacts in top-level build/ directory
+build/
+
+# Keep this file at repo root
