@@ -225,7 +225,7 @@ void test_cancel_published_task() {
     platform.publish_task(task);
 
     bool cancelled_signal = false;
-    platform.sig_task_cancelled.connect([&](const std::shared_ptr<Task> &t) {
+    platform.sig_task_cancelled.connect([&](const std::shared_ptr<Task> &) {
         cancelled_signal = true;
     });
 
@@ -252,7 +252,7 @@ void test_cancel_processing_task_emits_request_signal() {
 
     bool request_signal = false;
     std::string received_reason;
-    platform.sig_task_cancel_requested.connect([&](const std::shared_ptr<Task> &t, const std::string &reason) {
+    platform.sig_task_cancel_requested.connect([&](const std::shared_ptr<Task> &, const std::string &reason) {
         request_signal = true;
         received_reason = reason;
     });

@@ -19,6 +19,10 @@ include_directories(${CMAKE_SOURCE_DIR}/third_party/tl_expected/include)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/xswl_signals/include)
 include_directories(${CMAKE_SOURCE_DIR}/third_party/nlohmann)
 
+# 线程库（跨平台）
+find_package(Threads REQUIRED)
+
+
 # 项目头文件
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
