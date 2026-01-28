@@ -85,7 +85,7 @@ static ClaimerStatus from_string(const std::string &str);  // 从字符串解析
 struct TaskResult {
     bool success;                                    // 是否成功
     std::string summary;                             // 结果摘要
-    std::map<std::string, std::string> output_data;  // 输出数据
+    std::string output;  // 输出数据（自由文本，建议序列化为 JSON 等）
     tl::optional<std::string> error_message;         // 错误信息（可选）
     
     // 构造函数

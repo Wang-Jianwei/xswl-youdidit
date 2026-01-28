@@ -112,7 +112,7 @@ tl::optional<ClaimerStatus> claimer_status_from_string(const std::string &str);
 struct TaskResult {
     bool success;                                    ///< 是否成功
     std::string summary;                             ///< 结果摘要
-    std::map<std::string, std::string> output_data;  ///< 输出数据（键值对）
+    std::string output;                              ///< 输出数据（自由文本，推荐序列化为 JSON 或类似格式）
     tl::optional<std::string> error_message;         ///< 错误信息（可选）
     
     /**

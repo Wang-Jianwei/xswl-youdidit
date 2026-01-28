@@ -37,15 +37,12 @@ int main() {
     // 4. TaskResult 测试
     std::cout << "TaskResult structure:\n";
     TaskResult result(true, "Task executed successfully");
-    result.output_data["output_file"] = "/path/to/output.txt";
-    result.output_data["execution_time"] = "1.23s";
+    // 将多个输出项合并为字符串（示例：可使用 JSON 或其他序列化格式）
+    result.output = "output_file=/path/to/output.txt;execution_time=1.23s";
     
     std::cout << "  Success: " << (result.success ? "Yes" : "No") << "\n";
     std::cout << "  Summary: " << result.summary << "\n";
-    std::cout << "  Output data:\n";
-    for (const auto &kv : result.output_data) {
-        std::cout << "    " << kv.first << " = " << kv.second << "\n";
-    }
+    std::cout << "  Output: " << result.output << "\n";
     std::cout << "\n";
     
     // 5. Error 测试

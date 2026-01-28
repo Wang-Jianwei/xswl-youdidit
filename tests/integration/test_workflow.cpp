@@ -35,7 +35,7 @@ std::shared_ptr<Task> publish_sample(TaskPlatform &platform,
            .category(category)
            .handler([](Task & /*task*/, const std::string &input) -> tl::expected<TaskResult, std::string> {
                TaskResult result(true, "processed" + input);
-               result.output_data["echo"] = input;
+               result.output = input;
                return result;
            });
     auto task = builder.build();

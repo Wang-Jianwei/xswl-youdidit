@@ -17,7 +17,7 @@ int main() {
            .category("default")
            .handler([](Task & /*task*/, const std::string &input) -> tl::expected<TaskResult, std::string> {
                TaskResult result(true, "handled: " + input);
-               result.output_data["input"] = input;
+               result.output = input;
                return result;
            });
 

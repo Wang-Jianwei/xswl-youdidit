@@ -34,7 +34,7 @@ std::shared_ptr<Task> build_and_publish(TaskPlatform &platform,
            .category(category)
            .handler([](Task & /*task*/, const std::string &input) -> tl::expected<TaskResult, std::string> {
                TaskResult r(true, "ok" + input);
-               r.output_data["len"] = std::to_string(input.size());
+               r.output = std::to_string(input.size());
                return r;
            });
     auto task = builder.build();

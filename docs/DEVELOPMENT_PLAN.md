@@ -269,7 +269,7 @@ enum class ClaimerStatus {
 struct TaskResult {
     bool success;
     std::string summary;
-    std::map<std::string, std::string> output_data;
+    std::string output;  // 输出数据（自由文本）
     tl::optional<std::string> error_message;
     
     TaskResult();

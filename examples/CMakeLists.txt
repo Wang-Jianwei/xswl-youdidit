@@ -10,3 +10,9 @@ target_link_libraries(example_web_monitoring youdidit_core youdidit_web Threads:
 
 add_executable(example_web_demo web_demo.cpp)
 target_link_libraries(example_web_demo youdidit_core youdidit_web Threads::Threads)
+
+add_executable(example_signals_usage signals_usage.cpp)
+target_link_libraries(example_signals_usage youdidit_core Threads::Threads)
+
+add_executable(example_perf_monitor perf_monitor.cpp)
+target_link_libraries(example_perf_monitor youdidit_core Threads::Threads)
