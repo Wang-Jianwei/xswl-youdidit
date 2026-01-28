@@ -46,8 +46,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v4
+      with:
+        submodules: recursive
 
-    - name: Add submodule
+    - name: Update submodule
       run: git submodule update --remote third_party/xswl_signals
 
     - name: Set reusable strings
