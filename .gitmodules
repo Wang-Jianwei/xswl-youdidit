@@ -1,0 +1,3 @@
+[submodule "third_party/xswl_signals"]
+	path = third_party/xswl_signals
+	url = https://github.com/Wang-Jianwei/xswl-signals.git
