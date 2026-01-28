@@ -50,6 +50,9 @@ public:
     std::atomic<bool> cancel_requested_{false};
     std::string cancel_reason_;
 
+    // 自动清理标志（是否允许平台基于策略删除此任务）
+    std::atomic<bool> auto_cleanup_{false};
+
     // 线程同步
     mutable std::mutex data_mutex_;
     mutable std::mutex handler_mutex_;
@@ -64,7 +67,8 @@ public:
           claimed_at_(0),
           started_at_(0),
           completed_at_(0),
-          cancel_requested_(false) {}
+          cancel_requested_(false),
+          auto_cleanup_(false) {}
     
     Impl() : Impl(generate_task_id()) {}
     
@@ -256,6 +260,15 @@ tl::expected<void, Error> Task::request_cancel(const std::string &reason) {
 
 bool Task::is_cancel_requested() const noexcept {
     return d->cancel_requested_.load(std::memory_order_acquire);
+}
+
+Task &Task::set_auto_cleanup(bool auto_cleanup) {
+    d->auto_cleanup_.store(auto_cleanup, std::memory_order_release);
+    return *this;
+}
+
+bool Task::auto_cleanup() const noexcept {
+    return d->auto_cleanup_.load(std::memory_order_acquire);
 }
 
 Task &Task::set_category(const std::string &category) {

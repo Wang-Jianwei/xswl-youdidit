@@ -175,6 +175,40 @@ bool TaskPlatform::cancel_task(const TaskId &task_id) {
     return true;
 }
 
+void TaskPlatform::clear_tasks_by_status(TaskStatus status, bool only_auto_clean) {
+    std::vector<std::shared_ptr<Task>> deleted;
+    {
+        std::lock_guard<std::mutex> lock(d->tasks_mutex_);
+        for (auto it = d->tasks_.begin(); it != d->tasks_.end();) {
+            const auto &task = it->second;
+            if (task->status() == status) {
+                if (only_auto_clean && !task->auto_cleanup()) {
+                    ++it;
+                    continue;
+                }
+                // 不删除仍被申领的任务（以避免破坏申领者状态）
+                if (!task->claimer_id().empty()) {
+                    ++it;
+                    continue;
+                }
+                deleted.push_back(task);
+                it = d->tasks_.erase(it);
+            } else {
+                ++it;
+            }
+        }
+    }
+
+    // 在释放平台锁后触发删除信号
+    for (const auto &t : deleted) {
+        emit sig_task_deleted(t);
+    }
+}
+
+void TaskPlatform::clear_completed_tasks(bool only_auto_clean) {
+    clear_tasks_by_status(TaskStatus::Completed, only_auto_clean);
+}
+
 // ========== 任务查询 ==========
 std::vector<std::shared_ptr<Task>> TaskPlatform::get_tasks(const TaskFilter &filter) const {
     std::vector<std::shared_ptr<Task>> result;

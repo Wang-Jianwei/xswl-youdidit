@@ -150,9 +150,21 @@ public:
     // ========== 业务逻辑方法 ==========
     // 设置任务处理函数
     Task &set_handler(TaskHandler handler);
-    
+
     // 执行任务
     tl::expected<TaskResult, Error> execute(const std::string &input);
+
+    // ========== 自动清理标志 ==========
+    /**
+     * @brief 设置是否允许在平台清理操作中自动删除此任务
+     * @param auto_cleanup true 表示允许被自动清理（默认 false）
+     */
+    Task &set_auto_cleanup(bool auto_cleanup);
+
+    /**
+     * @brief 检查是否允许自动清理
+     */
+    bool auto_cleanup() const noexcept;
     
     // 状态转换验证
     bool can_transition_to(TaskStatus new_status) const noexcept;

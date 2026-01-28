@@ -270,6 +270,52 @@ void test_cancel_processing_task_emits_request_signal() {
     std::cout << "PASSED" << std::endl;
 }
 
+void test_clear_completed_tasks_behaviour() {
+    std::cout << "Test 11: Clear completed tasks behaviour... ";
+    TaskPlatform platform;
+
+    auto t1 = platform.task_builder()
+                  .title("C1")
+                  .handler([](Task&, const std::string&){ return TaskResult(true, "ok"); })
+                  .build_and_publish();
+    auto t2 = platform.task_builder()
+                  .title("C2")
+                  .handler([](Task&, const std::string&){ return TaskResult(true, "ok"); })
+                  .build_and_publish();
+    platform.publish_task(t1);
+    platform.publish_task(t2);
+
+    // mark both as completed via valid transitions
+    t1->set_status(TaskStatus::Claimed);
+    t1->set_status(TaskStatus::Processing);
+    t1->set_status(TaskStatus::Completed);
+
+    t2->set_status(TaskStatus::Claimed);
+    t2->set_status(TaskStatus::Processing);
+    t2->set_status(TaskStatus::Completed);
+
+    // t1 auto_cleanup = true, t2 default false
+    t1->set_auto_cleanup(true);
+
+    bool deleted_signal_t1 = false;
+    bool deleted_signal_t2 = false;
+    platform.sig_task_deleted.connect([&](const std::shared_ptr<Task> &t) {
+        if (t->id() == t1->id()) deleted_signal_t1 = true;
+        if (t->id() == t2->id()) deleted_signal_t2 = true;
+    });
+
+    // Only delete auto cleanup
+    platform.clear_completed_tasks(true);
+    assert_true(deleted_signal_t1, "t1 should be deleted when auto_cleanup is true");
+    assert_true(platform.has_task(t2->id()), "t2 should remain when auto_cleanup is false");
+
+    // Now delete regardless of auto_cleanup
+    platform.clear_completed_tasks(false);
+    assert_true(!platform.has_task(t2->id()), "t2 should be deleted when only_auto_clean=false");
+
+    std::cout << "PASSED" << std::endl;
+}
+
 // ========== 主函数 ==========
 int main() {
     std::cout << "Running TaskPlatform unit tests..." << std::endl;
@@ -285,6 +331,7 @@ int main() {
     test_statistics();
     test_cancel_published_task();
     test_cancel_processing_task_emits_request_signal();
+    test_clear_completed_tasks_behaviour();
 
     std::cout << "================================" << std::endl;
     std::cout << "All tests passed!" << std::endl;

@@ -363,7 +363,46 @@ bool test_request_cancel_signal_and_flag() {
     return true;
 }
 
-// 测试 18: 任务处理函数响应取消请求
+// 测试 18: 直接取消未申领任务（Published -> Cancelled）
+bool test_cancel_published_task_direct() {
+    Task task;
+
+    bool cancelled_signal = false;
+    task.on_cancelled.connect([&](Task &t) {
+        cancelled_signal = true;
+    });
+
+    task.set_status(TaskStatus::Published);
+
+    auto res = task.cancel();
+    TEST_ASSERT(res.has_value(), "cancel() should succeed when Published");
+    TEST_ASSERT(cancelled_signal, "on_cancelled should be emitted");
+    TEST_ASSERT(task.status() == TaskStatus::Cancelled, "Status should be Cancelled");
+
+    return true;
+}
+
+// 测试 19: 在 Claimed/Processing 状态下调用 cancel() 应失败且不改变状态
+bool test_cancel_on_claimed_or_processing_should_fail() {
+    Task task;
+
+    task.set_status(TaskStatus::Published);
+    task.set_status(TaskStatus::Claimed);
+
+    auto res1 = task.cancel();
+    TEST_ASSERT(!res1.has_value(), "cancel() should fail when Claimed");
+    TEST_ASSERT(task.status() == TaskStatus::Claimed, "Status should remain Claimed");
+
+    // 设为 Processing
+    task.set_status(TaskStatus::Processing);
+    auto res2 = task.cancel();
+    TEST_ASSERT(!res2.has_value(), "cancel() should fail when Processing");
+    TEST_ASSERT(task.status() == TaskStatus::Processing, "Status should remain Processing");
+
+    return true;
+}
+
+// 测试 20: 任务处理函数响应取消请求
 bool test_handler_obeys_cancel_request() {
     Task task;
 
@@ -448,6 +487,8 @@ int main() {
     RUN_TEST(test_task_execution_failure);
     RUN_TEST(test_task_execution_signals);
     RUN_TEST(test_timestamps);
+    RUN_TEST(test_cancel_published_task_direct);
+    RUN_TEST(test_cancel_on_claimed_or_processing_should_fail);
     RUN_TEST(test_move_semantics);
     
     std::cout << std::endl;

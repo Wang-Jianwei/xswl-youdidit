@@ -228,7 +228,7 @@ public:
     
     bool can_transition_to(TaskStatus new_status) const;
     std::vector<TaskStatus> valid_next_states() const;
-    
+
     // ========== 信号槽接口 ==========
     
     xswl::signal_t<TaskStatus> &sig_status_changed();
@@ -240,25 +240,6 @@ public:
     xswl::signal_t<const TaskId &, const std::string &> &sig_failed();
     xswl::signal_t<int, int> &sig_priority_changed();  // (old_priority, new_priority)
 
-    // ========== 取消请求与审计元数据 ==========
-
-    - `request_cancel(reason)`：向任务发出协作式取消请求（会设置 `is_cancel_requested()` 标志并触发 `on_cancel_requested` 信号）。
-    - 审计信息：取消原因与时间将被记录到任务 `metadata` 中，使用键名：
-      - `cancel.reason`（取消原因字符串）
-      - `cancel.requested_at`（ISO 8601 UTC 时间戳，例如 `2026-01-28T12:34:56Z`）
-
-    **示例**：
-
-    ```cpp
-    // 发布者请求取消正在执行的任务
-    platform->cancel_task(task_id);
-
-    // 申领者/处理函数可通过以下方式检查取消请求：
-    if (task.is_cancel_requested()) {
-        // 中止并清理
-    }
-    ```
-
     // ========== 工具方法 ==========
     
     std::string to_string() const;                     // 转换为字符串表示
@@ -269,6 +250,62 @@ private:
     class Impl;
     std::unique_ptr<Impl> d;  // Pimpl 指针，使用简洁的 'd' 命名
 };
+```
+
+### 接口说明：取消（cancel）行为说明
+
+- `cancel()`（Published -> Cancelled）：仅当任务处于 `Published` 状态时成功执行，
+    会将状态原子性地设置为 `Cancelled` 并触发 `on_cancelled` 信号。
+- 如果任务处于 `Claimed`、`Processing` 或其他非 `Published` 状态，
+    调用 `cancel()` 将返回错误（`ErrorCode::TASK_STATUS_INVALID`），**不会**强制中断处理函数。
+- 对于已被申领或正在处理的任务，应使用 `request_cancel(reason)`（平台会在 `cancel_task` 中发起），
+    以实现协作式取消（`is_cancel_requested()` / `on_cancel_requested`）。
+
+**示例**：
+
+```cpp
+// 取消尚未被申领的任务
+auto res = task.cancel(); // 只有在 Published 时会成功
+if (!res) {
+    // 失败（可能已被申领或不允许取消）
+}
+```
+
+### 接口说明：任务自动清理（auto_cleanup）与平台清理 API
+
+- `Task::set_auto_cleanup(bool)`：设置任务是否允许被平台的清理操作自动删除（默认 `false`）。
+- `TaskPlatform::clear_tasks_by_status(TaskStatus status, bool only_auto_clean = true)`：清理处于指定状态的任务。默认只清理 `auto_cleanup == true` 的任务；如果 `only_auto_clean == false`，则不再检查该标志。
+- `TaskPlatform::clear_completed_tasks(bool only_auto_clean = true)`：便捷方法，用于清理 `Completed` 状态的任务。
+
+重要说明：平台在清理任务时会**跳过仍被申领**（`claimer_id` 非空）的任务以避免破坏申领者的状态；清理动作会触发 `sig_task_deleted` 信号供外部监听。
+
+**示例**：
+
+```cpp
+// 仅清理允许自动清理的已完成任务
+platform.clear_completed_tasks(true);
+
+// 强制清理所有已完成任务（不考虑 auto_cleanup）
+platform.clear_completed_tasks(false);
+```
+
+### 接口说明：取消请求与审计元数据
+
+- `request_cancel(reason)`：向任务发出协作式取消请求（会设置 `is_cancel_requested()` 标志并触发 `on_cancel_requested` 信号）。
+- 审计信息：取消原因与时间将被记录到任务 `metadata` 中，使用键名：
+    - `cancel.reason`（取消原因字符串）
+    - `cancel.requested_at`（ISO 8601 UTC 时间戳，例如 `2026-01-28T12:34:56Z`）
+
+**示例**：
+
+```cpp
+// 发布者请求取消正在执行的任务
+platform->cancel_task(task_id);
+
+// 申领者/处理函数可通过以下方式检查取消请求：
+if (task.is_cancel_requested()) {
+    // 中止并清理
+}
 ```
 
 ### 使用示例
@@ -295,7 +332,7 @@ task.sig_status_changed().connect([](TaskStatus status) {
 auto result = task.execute("/data/input.csv");
 ```
 
-### Offline 与 Paused 的区别
+### 接口说明：Offline 与 Paused 的区别
 
 - **Offline（离线）**：完全不可用，例如网络断开、下班或系统维护。
     - 不接受任何新任务（`can_claim_more()` 返回 `false`）。

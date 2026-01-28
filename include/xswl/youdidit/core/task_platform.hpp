@@ -64,6 +64,19 @@ public:
     size_t task_count() const;
     size_t task_count_by_status(TaskStatus status) const;
 
+    // ========== 清理方法 ==========
+    /**
+     * @brief 清理指定状态的任务
+     * @param status 要清理的任务状态
+     * @param only_auto_clean 如果为 true 则仅清理那些通过 Task::set_auto_cleanup(true) 标记的任务
+     */
+    void clear_tasks_by_status(TaskStatus status, bool only_auto_clean = true);
+
+    /**
+     * @brief 清理已完成的任务（等价于 clear_tasks_by_status(Completed, only_auto_clean)）
+     */
+    void clear_completed_tasks(bool only_auto_clean = true);
+
     // ========== 申领者管理 ==========
     void register_claimer(const std::shared_ptr<Claimer> &claimer);
     bool unregister_claimer(const std::string &claimer_id);
@@ -109,6 +122,11 @@ public:
      * @brief 当对正在执行/已申领任务发出取消请求时触发（参数：task, reason）
      */
     xswl::signal_t<const std::shared_ptr<Task>&, const std::string&> sig_task_cancel_requested;
+
+    /**
+     * @brief 当任务被清理（从平台删除）时触发（参数：task）
+     */
+    xswl::signal_t<const std::shared_ptr<Task>&> sig_task_deleted;
 
     xswl::signal_t<const std::shared_ptr<Claimer>&> sig_claimer_registered;
     xswl::signal_t<const std::string&> sig_claimer_unregistered;
