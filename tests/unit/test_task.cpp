@@ -113,7 +113,7 @@ bool test_progress_update() {
     bool signal_triggered = false;
     int received_progress = -1;
     
-    task.on_progress_updated.connect([&](Task &t, int progress) {
+    task.on_progress_updated.connect([&](Task &, int progress) {
         signal_triggered = true;
         received_progress = progress;
     });
@@ -187,7 +187,7 @@ bool test_status_change_signals() {
     TaskStatus old_status = TaskStatus::Draft;
     TaskStatus new_status = TaskStatus::Draft;
     
-    task.on_status_changed.connect([&](Task &t, TaskStatus old_s, TaskStatus new_s) {
+    task.on_status_changed.connect([&](Task &, TaskStatus old_s, TaskStatus new_s) {
         status_changed = true;
         old_status = old_s;
         new_status = new_s;
@@ -250,7 +250,7 @@ bool test_blacklist_overrides_whitelist() {
 bool test_task_execution_success() {
     Task task;
     
-    task.set_handler([](Task &t, const std::string &input) -> tl::expected<TaskResult, std::string> {
+    task.set_handler([](Task &t, const std::string &) -> tl::expected<TaskResult, std::string> {
         t.set_progress(50);
         return TaskResult{true, "Task completed successfully"};
     });
@@ -271,7 +271,7 @@ bool test_task_execution_success() {
 bool test_task_execution_failure() {
     Task task;
     
-    task.set_handler([](Task &t, const std::string &input) -> tl::expected<TaskResult, std::string> {
+    task.set_handler([](Task &, const std::string &) -> tl::expected<TaskResult, std::string> {
         return tl::make_unexpected(std::string("Execution failed"));
     });
     
@@ -293,16 +293,16 @@ bool test_task_execution_signals() {
     bool completed_signal = false;
     TaskResult received_result{false, ""};
     
-    task.on_started.connect([&](Task &t) {
+    task.on_started.connect([&](Task &) {
         started_signal = true;
     });
     
-    task.on_completed.connect([&](Task &t, const TaskResult &result) {
+    task.on_completed.connect([&](Task &, const TaskResult &result) {
         completed_signal = true;
         received_result = result;
     });
     
-    task.set_handler([](Task &t, const std::string &input) -> tl::expected<TaskResult, std::string> {
+    task.set_handler([](Task &, const std::string &) -> tl::expected<TaskResult, std::string> {
         return TaskResult{true, "Completed"};
     });
     
@@ -339,7 +339,7 @@ bool test_request_cancel_signal_and_flag() {
     bool signal_triggered = false;
     std::string received_reason;
 
-    task.on_cancel_requested.connect([&](Task &t, const std::string &reason) {
+    task.on_cancel_requested.connect([&](Task &, const std::string &reason) {
         signal_triggered = true;
         received_reason = reason;
     });
@@ -368,7 +368,7 @@ bool test_cancel_published_task_direct() {
     Task task;
 
     bool cancelled_signal = false;
-    task.on_cancelled.connect([&](Task &t) {
+    task.on_cancelled.connect([&](Task &) {
         cancelled_signal = true;
     });
 
@@ -406,7 +406,7 @@ bool test_cancel_on_claimed_or_processing_should_fail() {
 bool test_handler_obeys_cancel_request() {
     Task task;
 
-    task.set_handler([](Task &t, const std::string &input) -> tl::expected<TaskResult, std::string> {
+    task.set_handler([](Task &t, const std::string &) -> tl::expected<TaskResult, std::string> {
         for (int i = 0; i < 50; ++i) {
             if (t.is_cancel_requested()) {
                 return tl::make_unexpected(std::string("cancelled"));

@@ -35,6 +35,9 @@ public:
     TaskBuilder &metadata(const std::string &key, const std::string &value);
     TaskBuilder &whitelist(const std::string &claimer_id);
     TaskBuilder &blacklist(const std::string &claimer_id);
+
+    // 设置任务是否允许被自动清理（默认 false）
+    TaskBuilder &auto_cleanup(bool enable);
     
     // ========== 构建方法 ==========
     std::shared_ptr<Task> build();

@@ -74,7 +74,7 @@ void test_set_status_with_signal() {
     ClaimerStatus old_status_captured = ClaimerStatus::Idle;
     ClaimerStatus new_status_captured = ClaimerStatus::Idle;
     
-    claimer.on_status_changed.connect([&](Claimer &c, ClaimerStatus old_s, ClaimerStatus new_s) {
+    claimer.on_status_changed.connect([&](Claimer &, ClaimerStatus old_s, ClaimerStatus new_s) {
         signal_emitted = true;
         old_status_captured = old_s;
         new_status_captured = new_s;
@@ -174,7 +174,7 @@ void test_claim_single_task() {
                       .description("Description")
                       .category("development")
                       .priority(80)
-                      .handler([](Task&, const std::string &input) {
+                      .handler([](Task&, const std::string &) {
                           return TaskResult(true, "Success");
                       })
                       .build_and_publish();
@@ -182,7 +182,7 @@ void test_claim_single_task() {
     assert_true(task != nullptr, "Task should be created");
     
     bool claim_signal_emitted = false;
-    claimer.on_task_claimed.connect([&](Claimer &c, std::shared_ptr<Task> t) {
+    claimer.on_task_claimed.connect([&](Claimer &, std::shared_ptr<Task>) {
         claim_signal_emitted = true;
     });
     

@@ -40,7 +40,14 @@ public:
 
     std::shared_ptr<Task> get_task(const TaskId &task_id) const;
     bool has_task(const TaskId &task_id) const;
-    bool remove_task(const TaskId &task_id);
+    /**
+     * @brief 从平台移除任务
+     * @param task_id 任务ID
+     * @param force 如果为 true 则强制移除（即使任务已被申领），否则拒绝移除已被申领的任务
+     * @return 成功返回 true，失败返回 false
+     */
+    bool remove_task(const TaskId &task_id, bool force = false);
+
     bool cancel_task(const TaskId &task_id);
 
     // ========== 任务查询 ==========
@@ -134,6 +141,9 @@ public:
 private:
     class Impl;
     std::unique_ptr<Impl> d;
+
+    // 私有删除辅助方法（供内部统一调用）
+    bool _delete_task_internal(const TaskId &task_id, bool force = false);
 };
 
 } // namespace youdidit

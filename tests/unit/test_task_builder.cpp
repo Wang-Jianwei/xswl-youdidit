@@ -256,6 +256,35 @@ bool test_build_and_publish() {
     return true;
 }
 
+// 测试 11: auto_cleanup 标志（默认 false，且可设置为 true）
+bool test_auto_cleanup_flag() {
+    // 默认情况下，auto_cleanup 应为 false
+    TaskBuilder default_builder;
+    default_builder.title("Default AutoClean")
+                   .priority(10)
+                   .handler([](Task &t, const std::string &input) -> tl::expected<TaskResult, std::string> {
+                       return TaskResult{true, "Done"};
+                   });
+    auto t_default = default_builder.build();
+    TEST_ASSERT(t_default != nullptr, "Default build should succeed");
+    TEST_ASSERT(t_default->auto_cleanup() == false, "Default auto_cleanup should be false");
+
+    // 设置为 true
+    TaskBuilder builder;
+    builder.title("AutoClean Task")
+           .priority(20)
+           .handler([](Task &t, const std::string &input) -> tl::expected<TaskResult, std::string> {
+               return TaskResult{true, "Done"};
+           })
+           .auto_cleanup(true);
+
+    auto t = builder.build();
+    TEST_ASSERT(t != nullptr, "Build should succeed");
+    TEST_ASSERT(t->auto_cleanup() == true, "auto_cleanup should be true when set");
+
+    return true;
+}
+
 // 测试 11: reset 方法
 bool test_reset() {
     TaskBuilder builder;

@@ -149,9 +149,28 @@ bool TaskPlatform::has_task(const TaskId &task_id) const {
     return d->tasks_.find(task_id) != d->tasks_.end();
 }
 
-bool TaskPlatform::remove_task(const TaskId &task_id) {
-    std::lock_guard<std::mutex> lock(d->tasks_mutex_);
-    return d->tasks_.erase(task_id) > 0;
+bool TaskPlatform::_delete_task_internal(const TaskId &task_id, bool force) {
+    std::shared_ptr<Task> task;
+    {
+        std::lock_guard<std::mutex> lock(d->tasks_mutex_);
+        auto it = d->tasks_.find(task_id);
+        if (it == d->tasks_.end()) return false;
+        task = it->second;
+        if (!force && !task->claimer_id().empty()) {
+            // 不允许删除仍被申领的任务
+            return false;
+        }
+        d->tasks_.erase(it);
+    }
+
+    // 更新统计/清理 Claimer 的 claimed list 如果需要
+    // 注意：此处我们仅触发删除信号，Claimer 层的已申领列表在正常流程中由 complete/abandon 管理
+    emit sig_task_deleted(task);
+    return true;
+}
+
+bool TaskPlatform::remove_task(const TaskId &task_id, bool force) {
+    return _delete_task_internal(task_id, force);
 }
 
 bool TaskPlatform::cancel_task(const TaskId &task_id) {

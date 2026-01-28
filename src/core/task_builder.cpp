@@ -30,9 +30,10 @@ public:
     std::map<std::string, std::string> metadata_;
     std::set<std::string> whitelist_;
     std::set<std::string> blacklist_;
+    bool auto_cleanup_ = false; // 新增：是否允许自动清理
     
     explicit Impl(TaskPlatform* platform = nullptr)
-        : platform_(platform), priority_(0) {}
+        : platform_(platform), priority_(0), auto_cleanup_(false) {}
     
     void reset() {
         title_.clear();
@@ -44,6 +45,7 @@ public:
         metadata_.clear();
         whitelist_.clear();
         blacklist_.clear();
+        auto_cleanup_ = false;
     }
     
     std::vector<std::string> validate() const {
@@ -174,8 +176,17 @@ std::shared_ptr<Task> TaskBuilder::build() {
     for (const auto &id : d->blacklist_) {
         task->add_to_blacklist(id);
     }
+
+    // 设置 auto_cleanup 标志
+    task->set_auto_cleanup(d->auto_cleanup_);
     
     return task;
+}
+
+// Fluent API: auto_cleanup
+TaskBuilder &TaskBuilder::auto_cleanup(bool enable) {
+    d->auto_cleanup_ = enable;
+    return *this;
 }
 
 std::shared_ptr<Task> TaskBuilder::build_and_publish() {
