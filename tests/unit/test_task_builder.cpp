@@ -53,7 +53,7 @@ bool test_validation_missing_title() {
     
     builder.description("Description")
            .priority(50)
-           .handler([](Task &t, const std::string &input) -> tl::expected<TaskResult, std::string> {
+           .handler([](Task &, const std::string &) -> tl::expected<TaskResult, std::string> {
                return TaskResult{true, "Done"};
            });
     
@@ -95,7 +95,7 @@ bool test_validation_priority_range() {
     
     builder.title("Test Task")
            .priority(-10)  // 无效优先级
-           .handler([](Task &t, const std::string &input) -> tl::expected<TaskResult, std::string> {
+           .handler([](Task &, const std::string &) -> tl::expected<TaskResult, std::string> {
                return TaskResult{true, "Done"};
            });
     
@@ -113,7 +113,7 @@ bool test_validation_priority_range() {
     builder.reset()
            .title("Test Task")
            .priority(150)  // 无效优先级
-           .handler([](Task &t, const std::string &input) -> tl::expected<TaskResult, std::string> {
+           .handler([](Task &, const std::string &) -> tl::expected<TaskResult, std::string> {
                return TaskResult{true, "Done"};
            });
     
@@ -137,7 +137,7 @@ bool test_validation_title_length() {
     std::string long_title(250, 'a');  // 250个字符
     
     builder.title(long_title)
-           .handler([](Task &t, const std::string &input) -> tl::expected<TaskResult, std::string> {
+           .handler([](Task &, const std::string &) -> tl::expected<TaskResult, std::string> {
                return TaskResult{true, "Done"};
            });
     
@@ -164,7 +164,7 @@ bool test_build_success() {
            .category("testing")
            .add_tag("unit-test")
            .add_tag("automation")
-           .handler([](Task &t, const std::string &input) -> tl::expected<TaskResult, std::string> {
+           .handler([](Task &, const std::string &) -> tl::expected<TaskResult, std::string> {
                return TaskResult{true, "Completed"};
            })
            .metadata("author", "test")
@@ -214,7 +214,7 @@ bool test_whitelist_blacklist() {
     
     builder.title("Restricted Task")
            .priority(50)
-           .handler([](Task &t, const std::string &input) -> tl::expected<TaskResult, std::string> {
+           .handler([](Task &, const std::string &) -> tl::expected<TaskResult, std::string> {
                return TaskResult{true, "Done"};
            })
            .whitelist("claimer_1")
@@ -241,7 +241,7 @@ bool test_build_and_publish() {
     
     builder.title("Published Task")
            .priority(50)
-           .handler([](Task &t, const std::string &input) -> tl::expected<TaskResult, std::string> {
+           .handler([](Task &, const std::string &) -> tl::expected<TaskResult, std::string> {
                return TaskResult{true, "Done"};
            });
     
@@ -262,7 +262,7 @@ bool test_auto_cleanup_flag() {
     TaskBuilder default_builder;
     default_builder.title("Default AutoClean")
                    .priority(10)
-                   .handler([](Task &t, const std::string &input) -> tl::expected<TaskResult, std::string> {
+                   .handler([](Task &, const std::string &) -> tl::expected<TaskResult, std::string> {
                        return TaskResult{true, "Done"};
                    });
     auto t_default = default_builder.build();
@@ -273,7 +273,7 @@ bool test_auto_cleanup_flag() {
     TaskBuilder builder;
     builder.title("AutoClean Task")
            .priority(20)
-           .handler([](Task &t, const std::string &input) -> tl::expected<TaskResult, std::string> {
+           .handler([](Task &, const std::string &) -> tl::expected<TaskResult, std::string> {
                return TaskResult{true, "Done"};
            })
            .auto_cleanup(true);
@@ -294,7 +294,7 @@ bool test_reset() {
            .priority(50)
            .category("cat1")
            .add_tag("tag1")
-           .handler([](Task &t, const std::string &input) -> tl::expected<TaskResult, std::string> {
+           .handler([](Task &, const std::string &) -> tl::expected<TaskResult, std::string> {
                return TaskResult{true, "Done"};
            });
     
@@ -307,7 +307,7 @@ bool test_reset() {
     // 验证可以重新使用
     builder.title("Task 2")
            .priority(30)
-           .handler([](Task &t, const std::string &input) -> tl::expected<TaskResult, std::string> {
+           .handler([](Task &, const std::string &) -> tl::expected<TaskResult, std::string> {
                return TaskResult{true, "Done 2"};
            });
     
@@ -325,7 +325,7 @@ bool test_multiple_builds() {
     
     builder.title("Template Task")
            .priority(50)
-           .handler([](Task &t, const std::string &input) -> tl::expected<TaskResult, std::string> {
+           .handler([](Task &, const std::string &) -> tl::expected<TaskResult, std::string> {
                return TaskResult{true, "Done"};
            });
     
@@ -348,7 +348,7 @@ bool test_validation_description_length() {
     
     builder.title("Task with long description")
            .description(long_description)
-           .handler([](Task &t, const std::string &input) -> tl::expected<TaskResult, std::string> {
+           .handler([](Task &, const std::string &) -> tl::expected<TaskResult, std::string> {
                return TaskResult{true, "Done"};
            });
     

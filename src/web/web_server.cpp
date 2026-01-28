@@ -89,12 +89,12 @@ void WebServer::_setup_routes() {
     httplib::Server *server = static_cast<httplib::Server*>(http_server_);
     
     // 首页 - Web 仪表板
-    server->Get("/", [this](const httplib::Request& req, httplib::Response& res) {
+    server->Get("/", [this](const httplib::Request&, httplib::Response& res) {
         res.set_content(_get_dashboard_html(), "text/html; charset=utf-8");
     });
     
     // REST API - 获取指标
-    server->Get("/api/metrics", [this](const httplib::Request& req, httplib::Response& res) {
+    server->Get("/api/metrics", [this](const httplib::Request&, httplib::Response& res) {
         auto metrics = dashboard_->get_metrics();
         
         std::ostringstream oss;
@@ -113,7 +113,7 @@ void WebServer::_setup_routes() {
     });
     
     // REST API - 获取任务摘要
-    server->Get("/api/tasks", [this](const httplib::Request& req, httplib::Response& res) {
+    server->Get("/api/tasks", [this](const httplib::Request&, httplib::Response& res) {
         auto tasks = dashboard_->get_tasks_summary();
         
         std::ostringstream oss;
@@ -140,7 +140,7 @@ void WebServer::_setup_routes() {
     });
     
     // REST API - 获取申领者摘要
-    server->Get("/api/claimers", [this](const httplib::Request& req, httplib::Response& res) {
+    server->Get("/api/claimers", [this](const httplib::Request&, httplib::Response& res) {
         auto claimers = dashboard_->get_claimers_summary();
         
         std::ostringstream oss;
@@ -163,7 +163,7 @@ void WebServer::_setup_routes() {
     
     // REST API - 获取事件日志
     // REST API - 获取事件日志
-    server->Get("/api/logs", [this](const httplib::Request& req, httplib::Response& res) {
+    server->Get("/api/logs", [this](const httplib::Request&, httplib::Response& res) {
         auto logs = dashboard_->get_event_logs();
         
         std::ostringstream oss;

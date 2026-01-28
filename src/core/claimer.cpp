@@ -584,7 +584,7 @@ tl::expected<void, Error> Claimer::_check_claim_permission(const std::shared_ptr
     return {};
 }
 
-void Claimer::_update_statistics(TaskStatus old_status, TaskStatus new_status) {
+void Claimer::_update_statistics(TaskStatus /*old_status*/, TaskStatus new_status) {
     // 注意：active_task_count 在 complete_task 和 abandon_task 中已经处理
     // 这里只更新完成/失败计数
     if (new_status == TaskStatus::Completed) {

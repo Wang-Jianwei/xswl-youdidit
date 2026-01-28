@@ -166,7 +166,7 @@ int main(int argc, char** argv) {
             builder.title(task_type.name + " #" + std::to_string(task_id))
                    .category(task_type.category)
                    .priority(task_type.priority)
-                   .handler([duration_ms, success_threshold, success_dist](Task& task, const std::string&) mutable -> tl::expected<TaskResult, std::string> {
+                   .handler([duration_ms, success_threshold, success_dist](Task&, const std::string&) mutable -> tl::expected<TaskResult, std::string> {
                        // 模拟任务处理
                        std::this_thread::sleep_for(std::chrono::milliseconds(duration_ms));
                        
