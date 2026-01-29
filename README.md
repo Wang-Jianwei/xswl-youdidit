@@ -132,6 +132,28 @@ python3 analyze_tests.py [构建目录]
 ```
 运行完整测试套件并生成 JSON 格式的详细报告。
 
+### Windows PowerShell 构建脚本
+
+本项目同时提供了适用于 Windows 的 PowerShell 脚本：
+
+```powershell
+# 推荐使用 PowerShell 7+，脚本文件需保存为 UTF-8 (带 BOM) 或 UTF-16 LE (Unicode)
+# 查看帮助
+./build_and_test.ps1 -Help
+
+# 清空后完整构建与测试
+./build_and_test.ps1 -Clean -All
+
+# 仅运行单元测试
+./build_and_test.ps1 -Unit
+
+# 指定并行数
+./build_and_test.ps1 -J 4
+```
+
+> ⚠️ **注意：** 若脚本出现乱码或解析错误，请确保 `build_and_test.ps1` 文件编码为 UTF-8 (带 BOM) 或 UTF-16 LE (Unicode)。
+> 可用 `tools/convert_encoding.ps1` 脚本安全转换编码。
+
 ### 手动构建与测试
 
 如果您更倾向于手动操作：
@@ -148,20 +170,20 @@ cmake ..
 make -j$(nproc)
 
 # 运行单元测试
-./tests/test_types
-./tests/test_task
-./tests/test_claimer
-./tests/test_task_platform
-./tests/test_web
+./tests/easy-test_types
+./tests/easy-test_task
+./tests/easy-test_claimer
+./tests/easy-test_task_platform
+./tests/easy-test_web
 
 # 运行集成测试
-./tests/integration_test_workflow
-./tests/integration_test_web_api
+./tests/easy-integration_test_workflow
+./tests/easy-integration_test_web_api
 
 # 运行示例
-./examples/example_basic_usage
-./examples/example_multi_claimer
-./examples/example_web_monitoring
+./examples/easy-example_basic_usage
+./examples/easy-example_multi_claimer
+./examples/easy-example_web_monitoring
 
 # 或使用 CTest 运行所有测试
 ctest --output-on-failure

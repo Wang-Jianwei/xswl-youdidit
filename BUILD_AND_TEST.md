@@ -222,22 +222,22 @@ cmake --build . -j$(nproc)
 
 ```bash
 # 单元测试
-./tests/test_types
-./tests/test_task
-./tests/test_task_builder
-./tests/test_claimer
-./tests/test_task_platform
-./tests/test_thread_safety
-./tests/test_web
+./tests/easy-test_types
+./tests/easy-test_task
+./tests/easy-test_task_builder
+./tests/easy-test_claimer
+./tests/easy-test_task_platform
+./tests/easy-test_thread_safety
+./tests/easy-test_web
 
 # 集成测试
-./tests/integration_test_workflow
-./tests/integration_test_web_api
+./tests/easy-integration_test_workflow
+./tests/easy-integration_test_web_api
 
 # 示例程序
-./examples/example_basic_usage
-./examples/example_multi_claimer
-./examples/example_web_monitoring
+./examples/easy-example_basic_usage
+./examples/easy-example_multi_claimer
+./examples/easy-example_web_monitoring
 
 # 使用 CTest
 ctest --output-on-failure

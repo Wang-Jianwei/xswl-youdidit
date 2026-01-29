@@ -77,6 +77,9 @@ struct Config {
     size_t max_latency_samples = 100000;
     size_t max_task_details = 100000;
     size_t max_event_samples = 1000000;
+    // optional comma-separated category list; if empty all tasks/claimers use "default"
+    std::string categories_str;
+    std::vector<std::string> categories;
 };
 
 static std::vector<std::pair<int,int>> parse_duration_ranges(const std::string &s) {
@@ -107,10 +110,24 @@ static std::vector<std::pair<int,int>> parse_duration_ranges(const std::string &
     return out;
 }
 
+static std::vector<std::string> parse_categories(const std::string &s) {
+    std::vector<std::string> out;
+    std::istringstream ss(s);
+    std::string tok;
+    while (std::getline(ss, tok, ',')) {
+        if (tok.empty()) continue;
+        // trim
+        size_t a = 0; while (a < tok.size() && isspace((unsigned char)tok[a])) ++a;
+        size_t b = tok.size(); while (b > a && isspace((unsigned char)tok[b-1])) --b;
+        out.push_back(tok.substr(a, b-a));
+    }
+    return out;
+}
+
 static void print_usage(const char* prog) {
     std::cerr << "Error: duration ranges are required. Usage:\n";
-    std::cerr << "  " << prog << " <tasks> <claimers> <duration_ranges> [html_path] [sample_interval_ms] [max_latency_samples] [max_task_details] [max_event_samples]\n";
-    std::cerr << "Example: " << prog << " 200 4 \"0-1,1-1,2-8\" perf_report.html 20 100000 2000 500000\n";
+    std::cerr << "  " << prog << " <tasks> <claimers> <duration_ranges> [html_path] [sample_interval_ms] [max_latency_samples] [max_task_details] [max_event_samples] [categories]\n";
+    std::cerr << "Example: " << prog << " 200 4 \"0-1,1-1,2-8\" perf_report.html 20 100000 2000 500000 \"A,B,C,D\"\n";
 }
 
 static bool parse_args(int argc, char** argv, Config &cfg) {
@@ -128,7 +145,23 @@ static bool parse_args(int argc, char** argv, Config &cfg) {
     if (argc > 6) cfg.max_latency_samples = std::stoul(argv[6]);
     if (argc > 7) cfg.max_task_details = std::stoul(argv[7]);
     if (argc > 8) cfg.max_event_samples = std::stoul(argv[8]);
+    if (argc > 9) cfg.categories_str = argv[9];
+    if (!cfg.categories_str.empty()) cfg.categories = parse_categories(cfg.categories_str);
     return true;
+}
+
+// Cross-platform sleep helper: on Windows spin and yield to reduce wake-up jitter; plain sleep elsewhere
+static void sleep_for_ms(int ms) {
+    if (ms <= 0) return;
+#if defined(_WIN32)
+    auto end = std::chrono::steady_clock::now() + std::chrono::milliseconds(ms);
+    while (std::chrono::steady_clock::now() < end) {
+        // yield to give up the CPU and avoid busy-loop burning a full core
+        std::this_thread::yield();
+    }
+#else
+    std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+#endif
 }
 
 int main(int argc, char** argv) {
@@ -142,6 +175,7 @@ int main(int argc, char** argv) {
     int sample_interval_ms = cfg.sample_interval_ms;
     std::string duration_ranges_str = cfg.duration_ranges_str;
     std::vector<std::pair<int,int>> duration_ranges = cfg.duration_ranges;
+    std::vector<std::string> categories = cfg.categories;
     std::string html_path = cfg.html_path;
 
     // latency sampling (limited)
@@ -207,6 +241,7 @@ int main(int argc, char** argv) {
     std::cout << "Performance monitor example\n";
     std::cout << "  tasks=" << num_tasks << " claimers=" << num_claimers;
     std::cout << " durations=" << duration_ranges_str;
+    if (!cfg.categories_str.empty()) std::cout << " categories=" << cfg.categories_str;
     if (!html_path.empty()) std::cout << " html=" << html_path;
     std::cout << " max_latency_samples=" << max_latency_samples << " max_task_details=" << max_task_details << "\n";
 
@@ -217,8 +252,9 @@ int main(int argc, char** argv) {
     std::vector<std::shared_ptr<Claimer>> claimers;
     for (size_t i = 0; i < num_claimers; ++i) {
         auto c = std::make_shared<Claimer>("claimer-" + std::to_string(i+1), "claimer-" + std::to_string(i+1));
-        c->add_category("default");
-        c->set_max_concurrent(5);
+        std::string cat = categories.empty() ? std::string("default") : categories[i % categories.size()];
+        c->add_category(cat);
+        c->set_max_concurrent(1);
         platform.register_claimer(c);
         claimers.push_back(c);
     }
@@ -238,7 +274,7 @@ int main(int argc, char** argv) {
             ms = 0;
         }
         auto start = std::chrono::steady_clock::now();
-        if (ms > 0) std::this_thread::sleep_for(std::chrono::milliseconds(ms));
+        if (ms > 0) sleep_for_ms(ms);
         auto end = std::chrono::steady_clock::now();
         uint64_t ns = std::chrono::duration_cast<std::chrono::nanoseconds>(end - start).count();
 
@@ -325,10 +361,11 @@ int main(int argc, char** argv) {
     // Publish tasks (each task re-uses the same handler)
     for (size_t i = 0; i < num_tasks; ++i) {
         auto builder = platform.task_builder();
+        std::string task_cat = categories.empty() ? std::string("default") : categories[i % categories.size()];
         builder.title("perf-task")
-               .category("default")
+               .category(task_cat)
                .priority(50)
-               .auto_cleanup(true)
+               .auto_cleanup(false)
                .handler(handler_factory);
         auto task = builder.build();
         platform.publish_task(task);
@@ -348,7 +385,7 @@ int main(int argc, char** argv) {
                 auto tasks = c->claim_tasks_to_capacity();
                 if (tasks.empty()) {
                     // nothing to claim right now
-                    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+                    sleep_for_ms(20);
                     continue;
                 }
                 for (auto &t : tasks) {
@@ -495,7 +532,7 @@ int main(int argc, char** argv) {
 
     // wait for work to finish
     while (metrics->total_executions.load(std::memory_order_relaxed) < num_tasks) {
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        sleep_for_ms(100);
     }
 
     // signal threads to stop and join
@@ -638,8 +675,8 @@ int main(int argc, char** argv) {
 
             ofs << "<h2>测试输入参数</h2>\n";
             ofs << "<table>\n";
-            ofs << "<tr><th>总任务数</th><th>Claimers</th><th>时长分布</th><th>采样间隔 (ms)</th><th>最大延迟样本数</th><th>最大任务详情数</th><th>最大事件样本数</th></tr>\n";
-            ofs << "<tr><td>" << num_tasks << "</td><td>" << num_claimers << "</td><td>" << duration_ranges_str << "</td><td>" << sample_interval_ms << "</td><td>" << max_latency_samples << "</td><td>" << max_task_details << "</td><td>" << max_event_samples << "</td></tr>\n";
+            ofs << "<tr><th>总任务数</th><th>Claimers</th><th>时长分布</th><th>Categories</th><th>采样间隔 (ms)</th><th>最大延迟样本数</th><th>最大任务详情数</th><th>最大事件样本数</th></tr>\n";
+            ofs << "<tr><td>" << num_tasks << "</td><td>" << num_claimers << "</td><td>" << duration_ranges_str << "</td><td>" << (cfg.categories_str.empty()?std::string("-"):cfg.categories_str) << "</td><td>" << sample_interval_ms << "</td><td>" << max_latency_samples << "</td><td>" << max_task_details << "</td><td>" << max_event_samples << "</td></tr>\n";
             ofs << "</table>\n";
 
             ofs << "<h3>关于\"平均延迟\"的说明与评估</h3>\n";

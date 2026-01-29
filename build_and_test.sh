@@ -122,6 +122,13 @@ fi
 # 进入构建目录
 cd "$BUILD_DIR"
 
+# 读取 CMake 写入的前缀文件（若存在）
+if [ -f "easy_executable_prefix.txt" ]; then
+    EASY_PREFIX="$(cat easy_executable_prefix.txt)"
+else
+    EASY_PREFIX="easy-"
+fi
+
 # 配置 CMake
 print_step "配置 CMake..."
 if cmake "$PROJECT_ROOT"; then
@@ -158,14 +165,19 @@ if [ "$RUN_UNIT" = true ]; then
     failed_tests=()
     
     for test in "${tests[@]}"; do
-        if [ -f "./tests/$test" ]; then
-            echo -n "  运行 $test... "
-            if ./tests/$test > /dev/null 2>&1; then
-                print_success "通过"
-            else
-                print_error "失败"
-                failed_tests+=("$test")
-            fi
+        if [ -f "./tests/easy-$test" ]; then
+            exe="./tests/easy-$test"
+        elif [ -f "./tests/$test" ]; then
+            exe="./tests/$test"
+        else
+            continue
+        fi
+        echo -n "  运行 $test... "
+        if "$exe" > /dev/null 2>&1; then
+            print_success "通过"
+        else
+            print_error "失败"
+            failed_tests+=("$test")
         fi
     done
     
@@ -194,14 +206,19 @@ if [ "$RUN_INTEGRATION" = true ]; then
     failed_int_tests=()
     
     for test in "${int_tests[@]}"; do
-        if [ -f "./tests/$test" ]; then
-            echo -n "  运行 $test... "
-            if ./tests/$test > /dev/null 2>&1; then
-                print_success "通过"
-            else
-                print_error "失败"
-                failed_int_tests+=("$test")
-            fi
+        if [ -f "./tests/easy-$test" ]; then
+            exe="./tests/easy-$test"
+        elif [ -f "./tests/$test" ]; then
+            exe="./tests/$test"
+        else
+            continue
+        fi
+        echo -n "  运行 $test... "
+        if "$exe" > /dev/null 2>&1; then
+            print_success "通过"
+        else
+            print_error "失败"
+            failed_int_tests+=("$test")
         fi
     done
     
@@ -231,15 +248,20 @@ if [ "$RUN_EXAMPLES" = true ]; then
         )
         
         for example in "${examples[@]}"; do
-            if [ -f "./examples/$example" ]; then
-                print_step "运行示例: $example"
-                if ./examples/$example; then
-                    print_success "$example 执行成功"
-                else
-                    print_warning "$example 执行返回非零退出码"
-                fi
-                echo ""
+            if [ -f "./examples/easy-$example" ]; then
+                exe="./examples/easy-$example"
+            elif [ -f "./examples/$example" ]; then
+                exe="./examples/$example"
+            else
+                continue
             fi
+            print_step "运行示例: $example"
+            if "$exe"; then
+                print_success "$example 执行成功"
+            else
+                print_warning "$example 执行返回非零退出码"
+            fi
+            echo ""
         done
     else
         print_error "示例程序编译失败"

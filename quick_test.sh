@@ -31,6 +31,13 @@ print_error() {
 mkdir -p "$BUILD_DIR"
 cd "$BUILD_DIR"
 
+# 读取 CMake 写入的前缀文件（若存在）
+if [ -f "easy_executable_prefix.txt" ]; then
+    EASY_PREFIX="$(cat easy_executable_prefix.txt)"
+else
+    EASY_PREFIX="easy-"
+fi
+
 # 快速构建
 print_step "快速编译..."
 cmake "$SCRIPT_DIR" > /dev/null 2>&1
@@ -42,25 +49,35 @@ print_step "运行单元测试..."
 failed=0
 
 for test in test_types test_task test_claimer test_task_platform test_web; do
-    if [ -f "./tests/$test" ]; then
-        if ./tests/$test > /dev/null 2>&1; then
-            print_success "$test"
-        else
-            print_error "$test"
-            failed=$((failed + 1))
-        fi
+    if [ -f "./tests/easy-$test" ]; then
+        exe="./tests/easy-$test"
+    elif [ -f "./tests/$test" ]; then
+        exe="./tests/$test"
+    else
+        continue
+    fi
+    if $exe > /dev/null 2>&1; then
+        print_success "$test"
+    else
+        print_error "$test"
+        failed=$((failed + 1))
     fi
 done
 
 print_step "运行集成测试..."
 for test in integration_test_workflow integration_test_web_api; do
-    if [ -f "./tests/$test" ]; then
-        if ./tests/$test > /dev/null 2>&1; then
-            print_success "$test"
-        else
-            print_error "$test"
-            failed=$((failed + 1))
-        fi
+    if [ -f "./tests/easy-$test" ]; then
+        exe="./tests/easy-$test"
+    elif [ -f "./tests/$test" ]; then
+        exe="./tests/$test"
+    else
+        continue
+    fi
+    if $exe > /dev/null 2>&1; then
+        print_success "$test"
+    else
+        print_error "$test"
+        failed=$((failed + 1))
     fi
 done
 

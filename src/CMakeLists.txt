@@ -8,7 +8,13 @@ target_include_directories(youdidit_core PUBLIC
 )
 
 # Web 模块（可选）
+option(SKIP_WEB "Skip web related modules (auto set by build script)" OFF)
 option(BUILD_WEB_MODULE "Build web monitoring module" ON)
+# 如果 SKIP_WEB=ON，则强制关闭 web 模块
+if(SKIP_WEB)
+    set(BUILD_WEB_MODULE OFF CACHE BOOL "Build web monitoring module" FORCE)
+endif()
+
 if(BUILD_WEB_MODULE)
     file(GLOB_RECURSE WEB_SOURCES web/*.cpp)
     if(WEB_SOURCES)
