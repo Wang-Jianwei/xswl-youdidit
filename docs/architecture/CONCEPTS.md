@@ -153,6 +153,6 @@ sequenceDiagram
 
 ## 参考
 
-- API 参考：`API.md`
+- API 参考：`docs/api/API.md`
 - 使用示例：`docs/usage.md`
 - 开发计划与阶段报告：`docs/architecture/DEVELOPMENT_PLAN.md`、`docs/architecture/PHASE1_REPORT.md` 等

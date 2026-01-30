@@ -49,4 +49,4 @@ dashboard->start_server(8080);
 更多示例与用例请参阅：
 - `examples/` 目录
 - `docs/web/WEB_MONITORING.md`（监控相关示例）
-- `API.md`（接口使用与详细文档）
+- `docs/api/API.md`（接口使用与详细文档）

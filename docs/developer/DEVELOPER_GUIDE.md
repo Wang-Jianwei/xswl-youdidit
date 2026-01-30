@@ -1,6 +1,6 @@
 # 开发者指南（Developer Guide）
 
-本文档面向开发者，包含任务模型、API 摘要、示例与实现相关的设计说明。若你是普通使用者，请优先查看 `docs/usage.md` 与 `API.md`。
+本文档面向开发者，包含任务模型、API 摘要、示例与实现相关的设计说明。若你是普通使用者，请优先查看 `docs/usage.md` 与 `docs/api/API.md`。
 
 ---
 
@@ -106,7 +106,7 @@ auto task2 = platform->task_builder()
 - 申领者（Claimer）：申领并执行任务
 - 分派者（Dispatcher）：可指定任务处理者
 
-角色的详细接口请参阅 `API.md`。
+角色的详细接口请参阅 `docs/api/API.md`。
 
 ---
 
@@ -144,7 +144,7 @@ public:
 
 - 信号语义（同步/异步/是否在锁内）：`docs/architecture/CONCEPTS.md`（Signal semantics）
 - 异步执行与 Executor 设计讨论：`docs/maintenance/todo.md`（改进建议）
-- API 参考：`API.md`
+- API 参考：`docs/api/API.md`
 - 使用示例：`docs/usage.md`
 
 ---

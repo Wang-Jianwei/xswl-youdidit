@@ -78,16 +78,16 @@ python3 analyze_tests.py build
 ## 📖 文档导航
 
 ### 对于新手
-开始阅读：**README.md** → **docs/getting_started/BUILD_AND_TEST.md** → 运行 **./quick_test.sh**
+开始阅读：**README.md** → **BUILD_AND_TEST.md** → 运行 **./quick_test.sh**
 
 ### 对于开发者
-参考文档：**docs/scripts/SCRIPTS_GUIDE.md** → **docs/getting_started/BUILD_AND_TEST.md** → 选择合适脚本
+参考文档：**SCRIPTS_GUIDE.md** → **BUILD_AND_TEST.md** → 选择合适脚本
 
 ### 对于 CI/CD
-集成指南：**docs/scripts/SCRIPTS_GUIDE.md** (CI/CD 集成部分) → **docs/getting_started/BUILD_AND_TEST.md** (常见场景)
+集成指南：**SCRIPTS_GUIDE.md** (CI/CD 集成部分) → **BUILD_AND_TEST.md** (常见场景)
 
 ### 对于维护者
-完整说明：**docs/scripts/SCRIPTS_SUMMARY.md** → **docs/scripts/SCRIPTS_GUIDE.md** (未来优化)
+完整说明：**SCRIPTS_SUMMARY.md** → **SCRIPTS_GUIDE.md** (未来优化)
 
 ## ✅ 功能清单
 
@@ -195,10 +195,10 @@ sha256sum *.sh *.py BUILD_AND_TEST.md > SCRIPTS.sha256
 
 | 问题 | 参考位置 |
 |------|---------|
-| 脚本无法执行 | docs/getting_started/BUILD_AND_TEST.md 故障排查 |
-| 编译失败 | docs/getting_started/BUILD_AND_TEST.md 故障排查 |
-| Python 报错 | docs/scripts/SCRIPTS_GUIDE.md Python 特性 |
-| 性能优化 | docs/getting_started/BUILD_AND_TEST.md 性能优化 |
+| 脚本无法执行 | BUILD_AND_TEST.md 故障排查 |
+| 编译失败 | BUILD_AND_TEST.md 故障排查 |
+| Python 报错 | SCRIPTS_GUIDE.md Python 特性 |
+| 性能优化 | BUILD_AND_TEST.md 性能优化 |
 | CI/CD 集成 | SCRIPTS_GUIDE.md CI/CD 集成 |
 
 ---

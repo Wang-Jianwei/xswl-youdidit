@@ -65,7 +65,7 @@
 ## 🚀 快速开始
 
 > **📌 在 GitHub Codespaces 中？** 
-> 查看 [Codespaces 用户指南](CODESPACES_GUIDE.md) 了解如何在云端运行和访问 Web 仪表板！
+> 查看 [Codespaces 用户指南](docs/ops/CODESPACES_GUIDE.md) 了解如何在云端运行和访问 Web 仪表板！
 
 ### 前置要求
 
@@ -207,7 +207,7 @@ ctest --output-on-failure
 # - Codespaces：使用 Ports 视图中的端口转发链接
 ```
 
-详见 [Codespaces 用户指南](CODESPACES_GUIDE.md)，了解：
+详见 [Codespaces 用户指南](docs/ops/CODESPACES_GUIDE.md)，了解：
 - 📺 如何访问 Web 仪表板
 - 🔌 端口转发配置
 - 🐛 常见问题排除
@@ -247,7 +247,7 @@ xswl-youdidit/
 
 - 详细设计与概念说明：`docs/architecture/CONCEPTS.md`（包含状态转换图、线程安全细则与信号语义）
 - 使用示例与代码片段：`docs/usage.md`
-- API 参考：`API.md`
+- API 参考：`docs/api/API.md`
 
 请在相应文档中查阅实现细节、示例代码与最佳实践。
 [开发者示例已移至 `docs/developer/DEVELOPER_GUIDE.md`（开发者指南）。]
@@ -258,7 +258,7 @@ xswl-youdidit/
 
 任务（Task）是平台的核心实体，代表需要处理的工作单元。
 
-> 📚 **完整 API 定义请参阅 [API.md](API.md#任务类-task)**
+> 📚 **完整 API 定义请参阅 [API.md](docs/api/API.md#任务类-task)**
 
 #### 核心属性概览
 
