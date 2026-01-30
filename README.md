@@ -1314,8 +1314,9 @@ conns.disconnect_all();  // 一次性断开所有连接
 xswl-youdidit 提供完整的 Web 监控系统，支持实时仪表板、事件日志、时间回放和性能分析。
 
 > **详细文档**：
-> - [Web 监控系统设计文档](docs/WEB_MONITORING.md) - 架构设计、部署模式、跨进程通信
-> - [Web API 文档](docs/WEB_API.md) - C++ API 和 HTTP REST API 完整参考
+> - [文档总览](docs/README.md) - 仓库文档索引与快速导航（中文）
+> - [Web 监控系统设计文档](docs/web/WEB_MONITORING.md) - 架构设计、部署模式、跨进程通信
+> - [Web API 文档](docs/web/WEB_API.md) - C++ API 和 HTTP REST API 完整参考
 
 ### 核心功能
 
@@ -1374,7 +1375,7 @@ auto snapshot = replay->get_snapshot_at(Timestamp::now() - std::chrono::minutes(
 | **独立进程** | Dashboard 作为独立监控服务 | 生产环境、故障隔离 |
 | **集中监控** | 一个 Dashboard 监控多个 Platform | 分布式部署、统一运维 |
 
-> 详细的部署架构和跨进程通信设计请参阅 [Web 监控系统设计文档](docs/WEB_MONITORING.md)
+> 详细的部署架构和跨进程通信设计请参阅 [Web 监控系统设计文档](docs/web/WEB_MONITORING.md)
 
 ## 📦 依赖库
 
@@ -1516,8 +1517,8 @@ for (const auto &worker_id : workers) {
 ### Web 监控示例
 
 详细的 Web 监控使用方式，请参阅：
-- 📘 [Web 监控设计](docs/WEB_MONITORING.md) - 架构设计与部署模式
-- 📗 [Web API 文档](docs/WEB_API.md) - 完整 API 参考
+- 📘 [Web 监控设计](docs/web/WEB_MONITORING.md) - 架构设计与部署模式
+- 📗 [Web API 文档](docs/web/WEB_API.md) - 完整 API 参考
 
 基础示例：
 

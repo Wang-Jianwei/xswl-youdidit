@@ -115,7 +115,7 @@ xswl-youdidit/
 
 ### 编码规范
 
-参考 [API.md](../API.md#编程风格规范)，核心要点：
+参考 [API.md](../../API.md#编程风格规范)，核心要点：
 
 1. **私有成员函数**：使用下划线前缀 `_method_name()`
 2. **引用类型**：右对齐写法 `const std::string &param`
@@ -1949,7 +1949,7 @@ void Task::set_status(TaskStatus status) {
 
 ## 参考文档
 
-- [API.md](../API.md) - 完整 API 文档
-- [README.md](../README.md) - 项目概述
+- [API.md](../../API.md) - 完整 API 文档
+- [README.md](../../README.md) - 项目概述
 - [WEB_API.md](WEB_API.md) - Web API 文档
 - [WEB_MONITORING.md](WEB_MONITORING.md) - Web 监控系统设计

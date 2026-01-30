@@ -36,7 +36,7 @@
 **状态**: 已完成
 
 **输出文件**:
-- [docs/PHASE5_REPORT.md](docs/PHASE5_REPORT.md)
+- [PHASE5_REPORT.md](PHASE5_REPORT.md)
 - [README.md](README.md)
 
 **要点**:

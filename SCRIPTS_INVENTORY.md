@@ -123,8 +123,8 @@ python3 analyze_tests.py build
 
 ### 主要文档
 - `README.md` - 项目主文档（已更新快速开始部分）
-- `docs/DEVELOPMENT_PLAN.md` - 开发计划
-- `docs/PHASE5_REPORT.md` - Phase 5 完成报告
+- `docs/architecture/DEVELOPMENT_PLAN.md` - 开发计划
+- `docs/architecture/PHASE5_REPORT.md` - Phase 5 完成报告
 
 ### 相关脚本（现有）
 - `tests/CMakeLists.txt` - 测试配置（已更新集成测试）

@@ -315,8 +315,8 @@ test:
 
 ## 更多信息
 
-- 完整开发计划：[DEVELOPMENT_PLAN.md](docs/DEVELOPMENT_PLAN.md)
+- 完整开发计划：[DEVELOPMENT_PLAN.md](docs/architecture/DEVELOPMENT_PLAN.md)
 - Phase 报告：
-  - [Phase 1](docs/PHASE1_REPORT.md)
-  - [Phase 2](docs/PHASE2_REPORT.md)
-  - [Phase 5](docs/PHASE5_REPORT.md)
+  - [Phase 1](docs/architecture/PHASE1_REPORT.md)
+  - [Phase 2](docs/architecture/PHASE2_REPORT.md)
+  - [Phase 5](docs/architecture/PHASE5_REPORT.md)

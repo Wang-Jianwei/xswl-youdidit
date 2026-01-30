@@ -149,7 +149,7 @@ kill -9 <PID>
 
 - 查看 [API.md](API.md) 了解完整的 API 文档
 - 查看 [README.md](README.md) 了解项目概述
-- 查看 [docs/WEB_API.md](docs/WEB_API.md) 了解 Web API 详情
+- 查看 [docs/web/WEB_API.md](docs/web/WEB_API.md) 了解 Web API 详情
 
 ## 🎉 就这样！
 
