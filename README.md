@@ -482,82 +482,11 @@ if (result) {
 4. **处理中** → 任务执行阶段，定期反馈状态
 5. **已完成** → 任务处理完成，反馈最终结果
 
-### 交互流程图
+### 交互流程图（简要）
 
-以下泳道图展示了任务从发布到完成的完整交互流程：
+详细 Mermaid 序列图已移入文档：`docs/architecture/CONCEPTS.md`（交互流程一节）。
 
-```mermaid
-sequenceDiagram
-    actor Publisher as 发布者
-    participant Platform as 任务平台
-    participant Task as 任务对象
-    actor Claimer as 申领者
-    participant WebUI as Web监控
-
-    %% 任务发布流程
-    Publisher->>Platform: 创建任务
-    Platform->>Task: 实例化 Task
-    Publisher->>Task: 设置属性(title, priority, description)
-    Publisher->>Platform: publish_task()
-    Task->>Task: 状态: Draft → Published
-    Task-->>Publisher: sig_published 信号
-    Task-->>WebUI: 记录日志
-    
-    %% 任务申领流程
-    Claimer->>Platform: 查询可申领任务
-    Platform-->>Claimer: 返回任务列表
-    Claimer->>Platform: claim_task(task_id)
-    Platform->>Task: 检查任务状态
-    Task->>Task: 状态: Published → Claimed
-    Task-->>Claimer: sig_claimed 信号
-    Task-->>Publisher: sig_claimed 信号
-    Task-->>WebUI: 记录申领日志
-    Platform-->>Claimer: 返回 TaskReference
-    
-    %% 任务处理流程
-    Claimer->>Task: start_task()
-    Task->>Task: 状态: Claimed → Processing
-    Task-->>Claimer: sig_started 信号
-    Task-->>Publisher: sig_started 信号
-    Task-->>WebUI: 记录开始日志
-    
-    %% 进度更新流程
-    loop 处理过程
-        Claimer->>Task: update_progress(50)
-        Task-->>Claimer: sig_progress_updated 信号
-        Task-->>Publisher: sig_progress_updated 信号
-        Task-->>WebUI: 实时更新进度
-    end
-    
-    %% 任务完成流程
-    Claimer->>Task: complete_task(result)
-    Task->>Task: 状态: Processing → Completed
-    Task-->>Claimer: sig_completed 信号
-    Task-->>Publisher: sig_completed 信号
-    Task-->>WebUI: 记录完成日志
-    Platform->>Claimer: 更新统计信息(reputation_points++)
-    
-    %% 异常流程（可选）
-    Note over Claimer,Task: 异常情况
-    alt 任务失败
-        Claimer->>Task: fail_task(reason)
-        Task->>Task: 状态: Processing → Failed
-        Task-->>Publisher: sig_failed 信号
-        Task-->>WebUI: 记录失败日志
-    else 任务放弃
-        Claimer->>Task: abandon_task(reason)
-        Task->>Task: 状态: Claimed/Processing → Abandoned
-        Task-->>Publisher: sig_task_abandoned 信号
-        Task-->>WebUI: 记录放弃日志
-        Task->>Task: 状态: Abandoned → Published
-    end
-    
-    %% Web监控回放
-    WebUI->>WebUI: 时间回放功能
-    Note over WebUI: 支持查看完整交互历史
-```
-
-**流程说明**：
+**流程说明（简短）**：
 
 1. **任务发布阶段**：发布者创建任务并发布到平台，触发 `sig_published` 信号
 2. **任务申领阶段**：申领者查询并申领任务，触发 `sig_claimed` 信号通知发布者和申领者
