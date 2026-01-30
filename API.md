@@ -855,7 +855,7 @@ std::cout << "运行时长: " << stats.uptime.count() << " 秒" << std::endl;
 > - `WebDashboard` 专注于监控、可视化和数据分析
 > - 不需要 Web 功能的用户无需引入 HTTP 相关依赖
 
-**完整 API 文档请参阅 [Web API 文档](docs/WEB_API.md)**，包含：
+**完整 API 文档请参阅 [Web API 文档](docs/web/WEB_API.md)**，包含：
 - WebDashboard、MetricsExporter、EventLog、TimeReplay 等类的完整定义
 - HTTP REST API 端点详细说明
 - WebSocket 实时推送 API

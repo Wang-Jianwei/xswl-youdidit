@@ -122,7 +122,7 @@ Socket API (系统级)
 - `third_party/httplib.h` - 207 行
 - `examples/web_demo.cpp` - 90 行
 - `run_web_demo.sh` - 演示脚本
-- `docs/WEB_SERVER_IMPLEMENTATION.md` - 实现文档
+- `docs/web/WEB_SERVER_IMPLEMENTATION.md` - 实现文档
 
 **修改文件:**
 - `include/xswl/youdidit/web/web_server.hpp` - 更新为实现
