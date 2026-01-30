@@ -9,5 +9,6 @@
 - `PHASE2_REPORT.md` - 阶段 2 完成报告
 - `PHASE5_REPORT.md` - 阶段 5 完成报告
 - `DEVELOPER_GUIDE.md` - 开发者指南（实现细节、示例代码与接口摘要）
+- `SIGNAL_SEMANTICS.md` - 信号语义（同步/异步语义、锁内触发约定、回调推荐）
 
 如需补充架构图或系统交互示例，可在本目录新增文档并在 `docs/README.md` 中注册。

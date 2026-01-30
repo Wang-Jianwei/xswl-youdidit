@@ -147,7 +147,7 @@ sequenceDiagram
 
 ## 信号槽机制
 
-事件驱动使用 `xswl-signals`，提供类型安全的信号/槽链接、优先级、一次性连接和自动生命周期管理。信号语义（同步/异步）与回调约定在 API 文档中有明确说明（推荐在回调中避免长时间阻塞或使用异步 offload）。
+事件驱动使用 `xswl-signals`，提供类型安全的信号/槽链接、优先级、一次性连接和自动生命周期管理。**信号语义（同步/异步）、锁内触发约定与回调建议请参阅《信号语义》**：`SIGNAL_SEMANTICS.md`（`docs/architecture/SIGNAL_SEMANTICS.md`）。
 
 ---
 

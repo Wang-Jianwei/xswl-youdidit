@@ -142,7 +142,7 @@ public:
 
 ## 开发者注意事项 & 参考
 
-- 信号语义（同步/异步/是否在锁内）：`docs/architecture/CONCEPTS.md`（Signal semantics）
+- 信号语义（同步/异步/是否在锁内）：`docs/architecture/SIGNAL_SEMANTICS.md`（Signal semantics）
 - 异步执行与 Executor 设计讨论：`docs/maintenance/todo.md`（改进建议）
 - API 参考：`docs/api/API.md`
 - 使用示例：`docs/usage.md`
