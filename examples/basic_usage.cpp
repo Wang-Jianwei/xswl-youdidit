@@ -15,8 +15,8 @@ int main() {
            .description("Minimal end-to-end flow")
            .priority(50)
            .category("default")
-           .handler([](Task & /*task*/, const std::string &input) -> tl::expected<TaskResult, std::string> {
-               TaskResult result(true, "handled: " + input);
+           .handler([](Task & /*task*/, const std::string &input) -> TaskResult {
+               TaskResult result("handled: " + input);
                result.output = input;
                return result;
            });
@@ -31,13 +31,13 @@ int main() {
     }
 
     auto result = claimer->run_task(claimed.value()->id(), "payload");
-    if (!result.has_value()) {
-        std::cerr << "Execution failed: " << result.error().message << std::endl;
+    if (!result.ok()) {
+        std::cerr << "Execution failed: " << result.error.message << std::endl;
         return 1;
     }
 
     std::cout << "Task " << claimed.value()->id() << " completed with summary: "
-              << result.value().summary << std::endl;
+              << result.summary << std::endl;
     std::cout << "Platform completed tasks: " << platform.get_statistics().completed_tasks << std::endl;
     return 0;
 }

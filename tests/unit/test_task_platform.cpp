@@ -45,7 +45,7 @@ void test_publish_and_get_task() {
     auto task = platform.task_builder()
                     .title("Publish Task")
                     .priority(60)
-                    .handler([](Task&, const std::string&) { return TaskResult(true, "ok"); })
+                    .handler([](Task&, const std::string&) { return TaskResult("ok"); })
                     .build_and_publish();
     platform.publish_task(task);
 
@@ -68,7 +68,7 @@ void test_register_and_claim_by_id() {
                     .title("Dev Task")
                     .category("dev")
                     .priority(50)
-                    .handler([](Task&, const std::string&) { return TaskResult(true, "done"); })
+                    .handler([](Task&, const std::string&) { return TaskResult("done"); })
                     .build_and_publish();
     platform->publish_task(task);
 
@@ -91,13 +91,13 @@ void test_claim_next_task_priority() {
                    .title("Low Priority")
                    .priority(10)
                    .category("general")
-                   .handler([](Task&, const std::string&) { return TaskResult(true, "low"); })
+                   .handler([](Task&, const std::string&) { return TaskResult("low"); })
                    .build_and_publish();
     auto high = platform->task_builder()
                     .title("High Priority")
                     .priority(90)
                     .category("general")
-                    .handler([](Task&, const std::string&) { return TaskResult(true, "high"); })
+                    .handler([](Task&, const std::string&) { return TaskResult("high"); })
                     .build_and_publish();
     platform->publish_task(low);
     platform->publish_task(high);
@@ -121,13 +121,13 @@ void test_claim_matching_task() {
                         .title("Backend Task")
                         .priority(40)
                         .category("backend")
-                        .handler([](Task&, const std::string&) { return TaskResult(true, "backend"); })
+                        .handler([](Task&, const std::string&) { return TaskResult("backend"); })
                         .build_and_publish();
     auto frontend = platform->task_builder()
                          .title("Frontend Task")
                          .priority(80)
                          .category("frontend")
-                         .handler([](Task&, const std::string&) { return TaskResult(true, "frontend"); })
+                         .handler([](Task&, const std::string&) { return TaskResult("frontend"); })
                          .build_and_publish();
     platform->publish_task(backend);
     platform->publish_task(frontend);
@@ -151,7 +151,7 @@ void test_claim_tasks_to_capacity() {
                         .title("Ops Task " + std::to_string(i))
                         .priority(30 + i)
                         .category("ops")
-                        .handler([](Task&, const std::string&) { return TaskResult(true, "ops"); })
+                        .handler([](Task&, const std::string&) { return TaskResult("ops"); })
                         .build_and_publish();
         platform->publish_task(task);
     }
@@ -169,13 +169,13 @@ void test_task_filters() {
                      .title("CatA")
                      .category("A")
                      .priority(10)
-                     .handler([](Task&, const std::string&) { return TaskResult(true, "a"); })
+                     .handler([](Task&, const std::string&) { return TaskResult("a"); })
                      .build_and_publish();
     auto task2 = platform.task_builder()
                      .title("CatB")
                      .category("B")
                      .priority(50)
-                     .handler([](Task&, const std::string&) { return TaskResult(true, "b"); })
+                     .handler([](Task&, const std::string&) { return TaskResult("b"); })
                      .build_and_publish();
     platform.publish_task(task1);
     platform.publish_task(task2);
@@ -199,13 +199,13 @@ void test_statistics() {
                     .title("Data Task")
                     .category("data")
                     .priority(70)
-                    .handler([](Task&, const std::string&) { return TaskResult(true, "data"); })
+                    .handler([](Task&, const std::string&) { return TaskResult("data"); })
                     .build_and_publish();
     platform->publish_task(task);
 
     // Claim and complete
     claimer->claim_task(task->id());
-    claimer->complete_task(task->id(), TaskResult(true, "done"));
+    claimer->complete_task(task->id(), TaskResult("done"));
 
     auto stats = platform->get_statistics();
     assert_equal(static_cast<int>(stats.total_tasks), 1, "Total tasks should be 1");
@@ -220,7 +220,7 @@ void test_cancel_published_task() {
     auto task = platform.task_builder()
                     .title("Cancelable Task")
                     .priority(50)
-                    .handler([](Task&, const std::string&) { return TaskResult(true, "ok"); })
+                    .handler([](Task&, const std::string&) { return TaskResult("ok"); })
                     .build_and_publish();
     platform.publish_task(task);
 
@@ -242,7 +242,7 @@ void test_cancel_processing_task_emits_request_signal() {
     auto task = platform.task_builder()
                     .title("Processing Task")
                     .priority(60)
-                    .handler([](Task&, const std::string&) { return TaskResult(true, "ok"); })
+                    .handler([](Task&, const std::string&) { return TaskResult("ok"); })
                     .build_and_publish();
     platform.publish_task(task);
 
@@ -276,11 +276,11 @@ void test_clear_completed_tasks_behaviour() {
 
     auto t1 = platform.task_builder()
                   .title("C1")
-                  .handler([](Task&, const std::string&){ return TaskResult(true, "ok"); })
+                  .handler([](Task&, const std::string&){ return TaskResult("ok"); })
                   .build_and_publish();
     auto t2 = platform.task_builder()
                   .title("C2")
-                  .handler([](Task&, const std::string&){ return TaskResult(true, "ok"); })
+                  .handler([](Task&, const std::string&){ return TaskResult("ok"); })
                   .build_and_publish();
     platform.publish_task(t1);
     platform.publish_task(t2);

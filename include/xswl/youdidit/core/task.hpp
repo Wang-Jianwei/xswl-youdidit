@@ -17,7 +17,7 @@ namespace youdidit {
 class Task {
 public:
     // ========== 类型定义 ==========
-    using TaskHandler = std::function<tl::expected<TaskResult, std::string>(
+    using TaskHandler = std::function<TaskResult(
         Task &task,
         const std::string &input
     )>;
@@ -152,7 +152,7 @@ public:
     Task &set_handler(TaskHandler handler);
 
     // 执行任务
-    tl::expected<TaskResult, Error> execute(const std::string &input);
+    TaskResult execute(const std::string &input);
 
     // ========== 自动清理标志 ==========
     /**
@@ -176,20 +176,20 @@ public:
     tl::expected<void, Error> try_claim(const std::string &claimer_id);
     
     // ========== 信号 ==========
-    xswl::signal_t<Task &, TaskStatus /* old_status */, TaskStatus /* new_status */> on_status_changed;
-    xswl::signal_t<Task &, int /* progress */> on_progress_updated;
-    xswl::signal_t<Task &, const std::string & /* claimer_id */> on_claimed;
-    xswl::signal_t<Task &> on_started;
-    xswl::signal_t<Task &, const std::string & /* claimer_id */> on_abandoned;
-    xswl::signal_t<Task &, const TaskResult &> on_completed;
-    xswl::signal_t<Task &, const std::string & /* error_message */> on_failed;
-    xswl::signal_t<Task &> on_cancelled;
+    xswl::signal_t<Task &, TaskStatus /* old_status */, TaskStatus /* new_status */> sig_status_changed;
+    xswl::signal_t<Task &, int /* progress */> sig_progress_updated;
+    xswl::signal_t<Task &, const std::string & /* claimer_id */> sig_claimed;
+    xswl::signal_t<Task &> sig_started;
+    xswl::signal_t<Task &, const std::string & /* claimer_id */> sig_abandoned;
+    xswl::signal_t<Task &, const TaskResult &> sig_completed;
+    xswl::signal_t<Task &, const Error &> sig_failed;
+    xswl::signal_t<Task &> sig_cancelled;
 
     /**
      * @brief 请求取消（协作式取消）
      *
      * 当发布者或平台希望取消正在执行的任务时，调用此方法可设置取消请求标志并触发
-     * `on_cancel_requested` 信号。任务处理函数应在合适的点检查 `is_cancel_requested()` 并
+     * `sig_cancel_requested` 信号。任务处理函数应在合适的点检查 `is_cancel_requested()` 并
      * 按需中止执行。
      */
     tl::expected<void, Error> request_cancel(const std::string &reason);
@@ -202,7 +202,7 @@ public:
     /**
      * @brief 取消请求信号（参数：Task&, reason）
      */
-    xswl::signal_t<Task &, const std::string &> on_cancel_requested;
+    xswl::signal_t<Task &, const std::string &> sig_cancel_requested;
     
 private:
     class Impl;

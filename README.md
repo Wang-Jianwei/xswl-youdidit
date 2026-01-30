@@ -331,10 +331,16 @@ claimer->execute_task(task.id(), "/data/input.csv");
 任务携带 `TaskHandler` 处理函数，由发布者定义具体业务逻辑：
 
 ```cpp
-using TaskHandler = std::function<tl::expected<TaskResult, std::string>(
+using TaskHandler = std::function<TaskResult(
     Task &task,              // 任务对象本身（用于更新进度等）
     const std::string &input // 输入数据（格式由用户定义）
 )>;
+```
+
+**注意**：`TaskHandler` 现在直接返回 `TaskResult`；若处理失败，请返回 `TaskResult::Failure(Error(...))`，例如：
+
+```cpp
+return TaskResult::Failure(Error("处理失败原因", ErrorCode::TASK_EXECUTION_FAILED));
 ```
 
 > **设计说明**：`input` 参数使用简单的 `std::string`，用户可仠据需要传入文件路径、JSON 字符串、配置文本等任意格式，在 handler 内自行解析。
@@ -346,7 +352,7 @@ using TaskHandler = std::function<tl::expected<TaskResult, std::string>(
 auto task1 = platform->task_builder()
     .title("数据处理任务")
     .priority(5)
-    .handler([](Task &task, const std::string &input) -> tl::expected<TaskResult, std::string> {
+    .handler([](Task &task, const std::string &input) -> TaskResult {
         // input 直接是文件路径
         task.set_progress(10);
         auto data = load_file(input);
@@ -355,7 +361,7 @@ auto task1 = platform->task_builder()
         auto result = process_data(data);
         
         task.set_progress(100);
-        return TaskResult{true, "处理完成"};
+        return TaskResult("处理完成");
     })
     .build();
 
@@ -365,14 +371,14 @@ claimer->execute_task(task1->id(), "/data/input.csv");
 // 示例 2：使用 JSON 字符串传递复杂参数
 auto task2 = platform->task_builder()
     .title("复杂分析任务")
-    .handler([](Task &task, const std::string &input) -> tl::expected<TaskResult, std::string> {
+    .handler([](Task &task, const std::string &input) -> TaskResult {
         // 按需解析 JSON
         auto config = nlohmann::json::parse(input);
         std::string file_path = config["file_path"];
         int batch_size = config.value("batch_size", 100);
         
         // ... 业务逻辑
-        return TaskResult{true, "分析完成"};
+        return TaskResult("分析完成");
     })
     .build();
 
@@ -1283,13 +1289,13 @@ conns.disconnect_all();  // 一次性断开所有连接
 | | `sig_claimed()` | `TaskId, string` | 任务被申领 |
 | | `sig_started()` | `TaskId` | 开始处理 |
 | | `sig_completed()` | `TaskId, TaskResult` | 处理完成 |
-| | `sig_failed()` | `TaskId, string` | 处理失败 |
+| | `sig_failed()` | `TaskId, Error` | 处理失败 |
 | | `sig_priority_changed()` | `int, int` | 优先级变化 (旧值, 新值) |
 | **Claimer** | `sig_task_assigned()` | `shared_ptr<Task>` | 任务分派给申领者 |
 | | `sig_task_started()` | `shared_ptr<Task>` | 申领者开始任务 |
 | | `sig_progress_updated()` | `TaskId, int` | 任务进度更新 |
 | | `sig_task_completed()` | `shared_ptr<Task>, TaskResult` | 任务完成 |
-| | `sig_task_failed()` | `shared_ptr<Task>, string` | 任务失败 |
+| | `sig_task_failed()` | `shared_ptr<Task>, Error` | 任务失败 |
 | | `sig_task_abandoned()` | `shared_ptr<Task>, string` | 任务放弃 |
 | | `sig_status_changed()` | `ClaimerStatus` | 申领者状态变化 |
 | **TaskPlatform** | `sig_task_published()` | `shared_ptr<Task>` | 任务发布到平台 |
@@ -1410,7 +1416,7 @@ auto task = platform->task_builder()
     .priority(5)
     .description("处理用户数据")
     .assign_to_role("DataProcessor")
-    .handler([](Task &task, const std::string &input) -> tl::expected<TaskResult, std::string> {
+    .handler([](Task &task, const std::string &input) -> TaskResult {
         // 发布者定义任务要做什么
         try {
             // 阶段1：加载数据
@@ -1477,7 +1483,7 @@ for (int i = 0; i < 10; ++i) {
     auto task = platform->task_builder()
         .title("Task " + std::to_string(i))
         .priority(i % 3 + 1)
-        .handler([i](Task &task, const std::string &input) -> tl::expected<TaskResult, std::string> {
+        .handler([i](Task &task, const std::string &input) -> TaskResult {
             // 每个任务有自己特定的处理逻辑
             std::cout << "Executing task " << i << std::endl;
             

@@ -132,21 +132,21 @@ public:
      * @brief 执行任务并自动完成记账
      * @param task 任务对象
      * @param input 任务输入数据
-     * @return 成功返回任务结果，失败返回错误
+     * @return 返回任务执行结果（成功或失败都包含在 TaskResult 中）
      * @note 此方法会自动：
      *       1. 执行任务
      *       2. 成功时调用 complete_task
      *       3. 失败时调用 abandon_task
      *       4. 更新所有统计数据
      */
-    tl::expected<TaskResult, Error> run_task(std::shared_ptr<Task> task, const std::string &input);
+    TaskResult run_task(std::shared_ptr<Task> task, const std::string &input);
     
     /**
      * @brief 执行任务并自动完成记账
      * @param task_id 任务ID
      * @param input 任务输入数据
      */
-    tl::expected<TaskResult, Error> run_task(const TaskId &task_id, const std::string &input);
+    TaskResult run_task(const TaskId &task_id, const std::string &input);
     
     /**
      * @brief 完成任务
@@ -205,12 +205,12 @@ public:
     TaskPlatform* platform() const noexcept;
     
     // ========== 信号 ==========
-    xswl::signal_t<Claimer &, std::shared_ptr<Task>> on_task_claimed;
-    xswl::signal_t<Claimer &, std::shared_ptr<Task>> on_task_started;
-    xswl::signal_t<Claimer &, std::shared_ptr<Task>, const TaskResult &> on_task_completed;
-    xswl::signal_t<Claimer &, std::shared_ptr<Task>, const std::string & /* reason */> on_task_failed;
-    xswl::signal_t<Claimer &, std::shared_ptr<Task>, const std::string & /* reason */> on_task_abandoned;
-    xswl::signal_t<Claimer &, ClaimerStatus /* old_status */, ClaimerStatus /* new_status */> on_status_changed;
+    xswl::signal_t<Claimer &, std::shared_ptr<Task>> sig_task_claimed;
+    xswl::signal_t<Claimer &, std::shared_ptr<Task>> sig_task_started;
+    xswl::signal_t<Claimer &, std::shared_ptr<Task>, const TaskResult &> sig_task_completed;
+    xswl::signal_t<Claimer &, std::shared_ptr<Task>, const std::string & /* reason */> sig_task_failed;
+    xswl::signal_t<Claimer &, std::shared_ptr<Task>, const std::string & /* reason */> sig_task_abandoned;
+    xswl::signal_t<Claimer &, ClaimerStatus /* old_status */, ClaimerStatus /* new_status */> sig_status_changed;
     
 private:
     class Impl;

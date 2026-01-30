@@ -105,30 +105,6 @@ tl::optional<ClaimerStatus> claimer_status_from_string(const std::string &str);
 // ========== 结构体类型 ==========
 
 /**
- * @brief 任务执行结果
- * 
- * 封装任务执行的结果信息，包括成功状态、摘要、输出数据等
- */
-struct TaskResult {
-    bool success;                                    ///< 是否成功
-    std::string summary;                             ///< 结果摘要
-    std::string output;                              ///< 输出数据（自由文本，推荐序列化为 JSON 或类似格式）
-    tl::optional<std::string> error_message;         ///< 错误信息（可选）
-    
-    /**
-     * @brief 默认构造函数
-     */
-    TaskResult();
-    
-    /**
-     * @brief 构造函数
-     * @param success 是否成功
-     * @param summary 结果摘要
-     */
-    TaskResult(bool success, const std::string &summary);
-};
-
-/**
  * @brief 错误码枚举
  * 
  * 定义系统中所有可能的错误码（强类型）
@@ -179,11 +155,52 @@ struct Error {
      * @param error_code 错误码
      */
     explicit Error(const std::string &msg, ErrorCode error_code = ErrorCode::SUCCESS);
+
+    // 明确默认拷贝/移动语义（避免模板在不同单元实例化导致的隐式删除）
+    Error(const Error&) = default;
+    Error(Error&&) = default;
+    Error &operator=(const Error&) = default;
+    Error &operator=(Error&&) = default;
     
     /**
      * @brief 获取错误码的整数值
      */
     int code_value() const noexcept { return to_int(code); }
+};
+
+/**
+ * @brief 任务执行结果
+ *
+ * 封装任务执行的结果信息，包括成功/失败、摘要、输出数据和结构化错误
+ */
+struct TaskResult {
+    std::string summary;                             ///< 结果摘要
+    std::string output;                              ///< 输出数据（自由文本，推荐序列化为 JSON 或类似格式）
+    Error error{ "", ErrorCode::SUCCESS };           ///< 失败时的错误信息（ErrorCode::SUCCESS 表示成功）
+
+    /**
+     * @brief 默认构造函数（表示成功且摘要为空）
+     */
+    TaskResult();
+
+    // 明确默认拷贝/移动语义，避免模板类型在不同编译单元导致隐式删除
+    TaskResult(const TaskResult &)=default;
+    TaskResult(TaskResult &&)=default;
+    TaskResult &operator=(const TaskResult&)=default;
+    TaskResult &operator=(TaskResult&&)=default;
+
+    /**
+     * @brief 成功结果构造函数
+     * @param summary 结果摘要
+     */
+    explicit TaskResult(const std::string &summary);
+
+    TaskResult(const Error &error);
+
+    /**
+     * @brief 检查是否成功
+     */
+    bool ok() const noexcept { return error.code == ErrorCode::SUCCESS; }
 };
 
 } // namespace youdidit

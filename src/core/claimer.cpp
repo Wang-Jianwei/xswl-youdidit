@@ -187,7 +187,7 @@ Claimer &Claimer::set_status(ClaimerStatus new_status) {
     
     ClaimerStatus actual_new_status = status();
     if (old_status != actual_new_status) {
-        emit on_status_changed(*this, old_status, actual_new_status);
+        emit sig_status_changed(*this, old_status, actual_new_status);
     }
     return *this;
 }
@@ -200,7 +200,7 @@ Claimer &Claimer::set_paused(bool paused) {
     }
     ClaimerStatus new_status = status();
     if (old_status != new_status) {
-        emit on_status_changed(*this, old_status, new_status);
+        emit sig_status_changed(*this, old_status, new_status);
     }
     return *this;
 }
@@ -213,7 +213,7 @@ Claimer &Claimer::set_offline(bool offline) {
     }
     ClaimerStatus new_status = status();
     if (old_status != new_status) {
-        emit on_status_changed(*this, old_status, new_status);
+        emit sig_status_changed(*this, old_status, new_status);
     }
     return *this;
 }
@@ -224,7 +224,7 @@ Claimer &Claimer::set_max_concurrent(int max_concurrent) {
     ClaimerStatus new_status = status();
     // 修改并发数可能会改变 Idle/Busy 状态
     if (old_status != new_status) {
-        emit on_status_changed(*this, old_status, new_status);
+        emit sig_status_changed(*this, old_status, new_status);
     }
     return *this;
 }
@@ -299,7 +299,7 @@ tl::expected<void, Error> Claimer::claim_task(std::shared_ptr<Task> task) {
     }
     
     // 触发信号
-    emit on_task_claimed(*this, task);
+    emit sig_task_claimed(*this, task);
     
     return {};  // 返回 void，不是 task
 }
@@ -348,41 +348,40 @@ std::vector<std::shared_ptr<Task>> Claimer::claim_tasks_to_capacity() {
 }
 
 // ========== 任务执行方法 ==========
-tl::expected<TaskResult, Error> Claimer::run_task(const TaskId &task_id, const std::string &input) {
+TaskResult Claimer::run_task(const TaskId &task_id, const std::string &input) {
     auto task_opt = get_task(task_id);
     if (!task_opt.has_value()) {
-        return tl::make_unexpected(Error("Task not found", ErrorCode::TASK_NOT_FOUND));
+        return Error("Task not found", ErrorCode::TASK_NOT_FOUND);
     }
     return run_task(task_opt.value(), input);
 }
 
-tl::expected<TaskResult, Error> Claimer::run_task(std::shared_ptr<Task> task, const std::string &input) {
+TaskResult Claimer::run_task(std::shared_ptr<Task> task, const std::string &input) {
     if (!task) {
-        return tl::make_unexpected(Error("Task is null", ErrorCode::TASK_NOT_FOUND));
+        return Error("Task is null", ErrorCode::TASK_NOT_FOUND);
     }
     
     // 检查任务是否属于当前申领者
     if (task->claimer_id() != d->id_) {
-        return tl::make_unexpected(Error("Task is not claimed by this claimer", 
-                                         ErrorCode::TASK_STATUS_INVALID));
+        return Error("Task is not claimed by this claimer", 
+                                         ErrorCode::TASK_STATUS_INVALID);
     }
     
     // 触发开始信号
-    emit on_task_started(*this, task);
+    emit sig_task_started(*this, task);
     
     // 执行任务
-    auto result = task->execute(input);
-    
-    if (result.has_value()) {
+    TaskResult result = task->execute(input);
+
+    if (result.ok()) {
         // 成功完成 - 自动调用 complete_task 记账
-        TaskResult task_result = result.value();
-        complete_task(task->id(), task_result);
-        return task_result;
+        complete_task(task->id(), result);
+        return result;
     } else {
         // 执行失败 - 自动调用 abandon_task 记账
-        Error error = result.error();
+        Error error = result.error;
         abandon_task(task->id(), error.message);
-        return tl::make_unexpected(error);
+        return error;
     }
 }
 
@@ -406,7 +405,7 @@ tl::expected<void, Error> Claimer::complete_task(const TaskId &task_id, const Ta
     task->set_completed_at(std::chrono::system_clock::now());
     
     // 触发信号
-    emit on_task_completed(*this, task, result);
+    emit sig_task_completed(*this, task, result);
     
     // 从已申领任务列表中移除已完成的任务，并减少活跃任务计数
     {
@@ -437,7 +436,7 @@ tl::expected<void, Error> Claimer::abandon_task(const TaskId &task_id, const std
     task->set_status(TaskStatus::Abandoned);
     
     // 触发信号
-    emit on_task_abandoned(*this, task, reason);
+    emit sig_task_abandoned(*this, task, reason);
     
     // 更新统计
     _update_statistics(old_status, TaskStatus::Abandoned);

@@ -1311,7 +1311,7 @@ int main() {
             t.set_progress(50);
             // 模拟处理
             t.set_progress(100);
-            return TaskResult{true, "处理完成"};
+            return TaskResult("处理完成");
         })
         .build_and_publish();
     
@@ -1524,7 +1524,7 @@ namespace youdidit {
 class Task {
 public:
     // 类型定义
-    using TaskHandler = std::function<tl::expected<TaskResult, std::string>(
+    using TaskHandler = std::function<TaskResult(
         Task &task,
         const std::string &input
     )>;

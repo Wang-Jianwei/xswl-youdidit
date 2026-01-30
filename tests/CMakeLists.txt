@@ -8,6 +8,11 @@ add_executable(test_types unit/test_types.cpp)
 set_target_properties(test_types PROPERTIES OUTPUT_NAME "${EASY_EXECUTABLE_PREFIX}test_types")
 target_link_libraries(test_types youdidit_core)
 
+# test_type_traits (compile-time trait checks for Error/TaskResult)
+add_executable(test_type_traits unit/test_type_traits.cpp)
+set_target_properties(test_type_traits PROPERTIES OUTPUT_NAME "${EASY_EXECUTABLE_PREFIX}test_type_traits")
+target_link_libraries(test_type_traits youdidit_core)
+
 # test_task
 add_executable(test_task unit/test_task.cpp)
 set_target_properties(test_task PROPERTIES OUTPUT_NAME "${EASY_EXECUTABLE_PREFIX}test_task")

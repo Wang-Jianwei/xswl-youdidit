@@ -85,12 +85,16 @@ tl::optional<ClaimerStatus> claimer_status_from_string(const std::string &str) {
 
 // ========== TaskResult 实现 ==========
 
-TaskResult::TaskResult() 
-    : success(false), summary("") {
+TaskResult::TaskResult()
+    : summary(""), output() {
 }
 
-TaskResult::TaskResult(bool success, const std::string &summary)
-    : success(success), summary(summary) {
+TaskResult::TaskResult(const std::string &summary)
+    : summary(summary), output() {
+}
+
+TaskResult::TaskResult(const Error &error)
+    : error(error) {
 }
 
 // ========== Error 实现 ==========

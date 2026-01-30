@@ -17,8 +17,8 @@ int main() {
            .description("simulate metric producing job")
            .priority(65)
            .category("monitoring")
-           .handler([](Task & /*task*/, const std::string & /*input*/) -> tl::expected<TaskResult, std::string> {
-               return TaskResult{true, "metrics collected"};
+           .handler([](Task & /*task*/, const std::string & /*input*/) -> TaskResult {
+               return TaskResult("metrics collected");
            });
     auto task = builder.build();
     platform.publish_task(task);

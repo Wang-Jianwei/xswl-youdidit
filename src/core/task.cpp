@@ -224,7 +224,7 @@ Task &Task::set_progress(int progress) {
     int old_progress = d->progress_.exchange(clamped_progress, std::memory_order_acq_rel);
     
     if (old_progress != clamped_progress) {
-        emit on_progress_updated(*this, clamped_progress);
+        emit sig_progress_updated(*this, clamped_progress);
     }
     
     return *this;
@@ -254,7 +254,7 @@ tl::expected<void, Error> Task::request_cancel(const std::string &reason) {
     set_metadata("cancel.reason", reason);
     set_metadata("cancel.requested_at", std::string(timebuf));
 
-    emit on_cancel_requested(*this, reason);
+    emit sig_cancel_requested(*this, reason);
     return {};
 }
 
@@ -359,45 +359,46 @@ Task &Task::set_handler(TaskHandler handler) {
     return *this;
 }
 
-tl::expected<TaskResult, Error> Task::execute(const std::string &input) {
+TaskResult Task::execute(const std::string &input) {
     std::lock_guard<std::mutex> lock(d->handler_mutex_);
-    
+
     if (!d->handler_) {
-        return tl::make_unexpected(Error("No handler set for task", ErrorCode::TASK_NO_HANDLER));
+        return Error("No handler set for task", ErrorCode::TASK_NO_HANDLER);
     }
-    
+
     TaskStatus current_status = status();
     if (current_status != TaskStatus::Claimed && current_status != TaskStatus::Processing) {
-        return tl::make_unexpected(Error("Task must be claimed or processing to execute", 
-                                         ErrorCode::TASK_INVALID_STATE));
+        return Error("Task must be claimed or processing to execute",
+                                         ErrorCode::TASK_INVALID_STATE);
     }
-    
+
     // 设置为处理中状态
     if (current_status == TaskStatus::Claimed) {
         set_status(TaskStatus::Processing);
         set_started_at(std::chrono::system_clock::now());
-        emit on_started(*this);
+        emit sig_started(*this);
     }
-    
+
     // 执行任务处理函数
-    auto result = d->handler_(*this, input);
-    
-    if (result.has_value()) {
+    TaskResult result = d->handler_(*this, input);
+
+    if (result.ok()) {
         // 成功
-        TaskResult task_result = result.value();
+        TaskResult task_result = result;
         set_status(TaskStatus::Completed);
         set_progress(100);
         set_completed_at(std::chrono::system_clock::now());
-        emit on_completed(*this, task_result);
+        emit sig_completed(*this, task_result);
         return task_result;
     } else {
         // 失败
-        std::string error_msg = result.error();
+        Error err = result.error;
         set_status(TaskStatus::Failed);
-        emit on_failed(*this, error_msg);
-        return tl::make_unexpected(Error(error_msg, ErrorCode::TASK_EXECUTION_FAILED));
+        emit sig_failed(*this, err);
+        return err;
     }
 }
+
 
 bool Task::can_transition_to(TaskStatus new_status) const noexcept {
     TaskStatus current_status = status();
@@ -520,7 +521,7 @@ tl::expected<void, Error> Task::start() {
     
     set_started_at(std::chrono::system_clock::now());
     _trigger_status_signal(TaskStatus::Claimed, TaskStatus::Processing);
-    emit on_started(*this);
+    emit sig_started(*this);
     return {};
 }
 
@@ -599,7 +600,7 @@ tl::expected<void, Error> Task::complete(const TaskResult &result) {
     set_progress(100);
     set_completed_at(std::chrono::system_clock::now());
     _trigger_status_signal(TaskStatus::Processing, TaskStatus::Completed);
-    emit on_completed(*this, result);
+    emit sig_completed(*this, result);
     return {};
 }
 
@@ -619,7 +620,7 @@ tl::expected<void, Error> Task::fail(const std::string &reason) {
     }
     
     _trigger_status_signal(TaskStatus::Processing, TaskStatus::Failed);
-    emit on_failed(*this, reason);
+    emit sig_failed(*this, Error(reason, ErrorCode::TASK_EXECUTION_FAILED));
     return {};
 }
 
@@ -663,18 +664,18 @@ tl::expected<void, Error> Task::republish() {
 
 // ========== 私有辅助方法 ==========
 void Task::_trigger_status_signal(TaskStatus old_status, TaskStatus new_status) {
-    emit on_status_changed(*this, old_status, new_status);
+    emit sig_status_changed(*this, old_status, new_status);
     
     // 触发特定状态的信号
     switch (new_status) {
         case TaskStatus::Claimed:
-            emit on_claimed(*this, claimer_id());
+            emit sig_claimed(*this, claimer_id());
             break;
         case TaskStatus::Abandoned:
-            emit on_abandoned(*this, claimer_id());
+            emit sig_abandoned(*this, claimer_id());
             break;
         case TaskStatus::Cancelled:
-            emit on_cancelled(*this);
+            emit sig_cancelled(*this);
             break;
         default:
             break;

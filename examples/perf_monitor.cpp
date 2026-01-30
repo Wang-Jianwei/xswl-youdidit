@@ -266,7 +266,7 @@ int main(int argc, char** argv) {
                          &claimer_mutex, &claimer_stats, &task_details_mutex, &task_details, &max_task_details,
                          &start_time, &global_event_times_ms, &global_event_mutex, &max_event_samples,
                          &claimer_event_times_ms, &claimer_event_mutex, &sampling_overhead_ns, &sampling_ops]
-                        (Task &task, const std::string &input) -> tl::expected<TaskResult, std::string> {
+                        (Task &task, const std::string &input) -> TaskResult {
         int ms = 0;
         try {
             ms = std::stoi(input);
@@ -354,7 +354,7 @@ int main(int argc, char** argv) {
         sampling_overhead_ns.fetch_add(_samp_ns, std::memory_order_relaxed);
         sampling_ops.fetch_add(1, std::memory_order_relaxed);
 
-        TaskResult r(true, "ok");
+        TaskResult r("ok");
         return r;
     };
 
@@ -395,7 +395,7 @@ int main(int argc, char** argv) {
                     std::uniform_int_distribution<int> d(pr.first, std::max(pr.first, pr.second));
                     int ms = d(rng);
                     auto res = c->run_task(t, std::to_string(ms));
-                    if (!res.has_value()) {
+                    if (!res.ok()) {
                         metrics->failures.fetch_add(1, std::memory_order_relaxed);
                         // record per-claimer failure
                         {

@@ -33,8 +33,8 @@ std::shared_ptr<Task> publish_sample(TaskPlatform &platform,
            .description("integration task")
            .priority(priority)
            .category(category)
-           .handler([](Task & /*task*/, const std::string &input) -> tl::expected<TaskResult, std::string> {
-               TaskResult result(true, "processed" + input);
+           .handler([](Task & /*task*/, const std::string &input) -> TaskResult {
+               TaskResult result("processed" + input);
                result.output = input;
                return result;
            });
@@ -60,7 +60,7 @@ bool test_task_lifecycle() {
 
     // 使用 run_task：执行并自动完成记账
     auto exec_result = claimer->run_task(claimed->id(), "::payload::");
-    TEST_ASSERT(exec_result.has_value(), "Execution should succeed");
+    TEST_ASSERT(exec_result.ok(), "Execution should succeed");
     TEST_ASSERT(claimed->status() == TaskStatus::Completed, "Task should be completed after run_task");
     TEST_ASSERT(claimer->total_completed() == 1, "Claimer completed counter should increment");
 

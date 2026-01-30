@@ -32,8 +32,8 @@ std::shared_ptr<Task> build_and_publish(TaskPlatform &platform,
            .description("web api task")
            .priority(55)
            .category(category)
-           .handler([](Task & /*task*/, const std::string &input) -> tl::expected<TaskResult, std::string> {
-               TaskResult r(true, "ok" + input);
+           .handler([](Task & /*task*/, const std::string &input) -> TaskResult {
+               TaskResult r("ok" + input);
                r.output = std::to_string(input.size());
                return r;
            });

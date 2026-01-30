@@ -56,26 +56,26 @@ void test_claimer_status_from_string() {
 }
 
 void test_task_result() {
-    // 默认构造
+    // 默认构造（表示成功）
     TaskResult r1;
-    assert(r1.success == false);
+    assert(r1.ok() == true);
     assert(r1.summary.empty());
-    assert(!r1.error_message.has_value());
+    assert(r1.error.code == ErrorCode::SUCCESS);
     
-    // 带参数构造
-    TaskResult r2(true, "Task completed successfully");
-    assert(r2.success == true);
+    // 带摘要构造（表示成功）
+    TaskResult r2("Task completed successfully");
+    assert(r2.ok() == true);
     assert(r2.summary == "Task completed successfully");
     
     // 添加输出数据（字符串形式）
     r2.output = "/path/to/result.txt";
     assert(r2.output == "/path/to/result.txt");
     
-    // 设置错误信息
-    TaskResult r3(false, "Task failed");
-    r3.error_message = "Connection timeout";
-    assert(r3.error_message.has_value());
-    assert(r3.error_message.value() == "Connection timeout");
+    // 构造失败结果并设置错误信息
+    TaskResult r3 = Error("Task failed", ErrorCode::TASK_EXECUTION_FAILED);
+    r3.error.message = "Connection timeout";
+    assert(r3.ok() == false);
+    assert(r3.error.message == "Connection timeout");
     
     std::cout << "✓ test_task_result passed" << std::endl;
 }

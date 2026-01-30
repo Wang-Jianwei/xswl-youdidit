@@ -24,13 +24,13 @@ int main() {
 
     // Create a claimer and connect signals
     auto claimer = std::make_shared<Claimer>("worker-1", "Worker One");
-    claimer->on_task_claimed.connect([](Claimer &c, std::shared_ptr<Task> t){
+    claimer->sig_task_claimed.connect([](Claimer &c, std::shared_ptr<Task> t){
         std::cout << "[Claimer] " << c.id() << " claimed " << t->id() << "\n";
     });
-    claimer->on_task_started.connect([](Claimer &c, std::shared_ptr<Task> t){
+    claimer->sig_task_started.connect([](Claimer &c, std::shared_ptr<Task> t){
         std::cout << "[Claimer] " << c.id() << " started " << t->id() << "\n";
     });
-    claimer->on_task_completed.connect([](Claimer &c, std::shared_ptr<Task> t, const TaskResult &res){
+    claimer->sig_task_completed.connect([](Claimer &c, std::shared_ptr<Task> t, const TaskResult &res){
         std::cout << "[Claimer] " << c.id() << " completed " << t->id() << " -> " << res.summary << "\n";
     });
 
@@ -42,29 +42,29 @@ int main() {
            .description("Demonstrate Task/Claimer/Platform signals")
            .category("default")
            .priority(50)
-           .handler([](Task & /*task*/, const std::string &input) -> tl::expected<TaskResult, std::string> {
+           .handler([](Task & /*task*/, const std::string &input) -> TaskResult {
                // Simulate progress updates
                // Note: here we just return a result; Task::set_progress might be used inside real handler
-               TaskResult r(true, std::string("processed: ") + input);
+               TaskResult r(std::string("processed: ") + input);
                r.output = input;
                return r;
            });
 
     auto task = builder.build();
 
-    task->on_status_changed.connect([](Task &t, TaskStatus old_s, TaskStatus new_s){
+    task->sig_status_changed.connect([](Task &t, TaskStatus old_s, TaskStatus new_s){
         std::cout << "[Task] " << t.id() << " status: " << to_string(old_s) << " -> " << to_string(new_s) << "\n";
     });
 
-    task->on_progress_updated.connect([](Task &t, int p){
+    task->sig_progress_updated.connect([](Task &t, int p){
         std::cout << "[Task] " << t.id() << " progress: " << p << "%\n";
     });
 
-    task->on_cancel_requested.connect([](Task &t, const std::string &reason){
+    task->sig_cancel_requested.connect([](Task &t, const std::string &reason){
         std::cout << "[Task] cancel requested for " << t.id() << ": " << reason << "\n";
     });
 
-    task->on_completed.connect([](Task &t, const TaskResult &r){
+    task->sig_completed.connect([](Task &t, const TaskResult &r){
         std::cout << "[Task] " << t.id() << " completed (local handler) -> " << r.summary << "\n";
     });
 
@@ -79,12 +79,12 @@ int main() {
     }
 
     auto res = claimer->run_task(claimed.value(), "payload-123");
-    if (!res.has_value()) {
-        std::cerr << "Run failed: " << res.error().message << "\n";
+    if (!res.ok()) {
+        std::cerr << "Run failed: " << res.error.message << "\n";
         return 1;
     }
 
-    std::cout << "Main: Task " << claimed.value()->id() << " finished with summary: " << res.value().summary << "\n";
+    std::cout << "Main: Task " << claimed.value()->id() << " finished with summary: " << res.summary << "\n";
 
     // Demonstrate task-level cancel request (won't affect completed task, but shows signal)
     task->request_cancel("unneeded");

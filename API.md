@@ -121,11 +121,23 @@ class Task {
 public:
     // ========== 类型定义 ==========
     
-    using TaskHandler = std::function<tl::expected<TaskResult, std::string>(
+    using TaskHandler = std::function<TaskResult(
         Task &task,
         const std::string &input
     )>;
-    
+
+    **注意**：`TaskHandler` 现在直接返回 `TaskResult`；若处理失败，请返回 `TaskResult::Failure(Error(...))`，例如：
+
+```cpp
+return TaskResult::Failure(Error("处理失败原因", ErrorCode::TASK_EXECUTION_FAILED));
+```
+
+    **注意**：`TaskHandler` 现在直接返回 `TaskResult`；若处理失败，请返回 `TaskResult::Failure(Error(...))`，例如：
+
+```cpp
+return tl::make_unexpected(Error("处理失败原因", ErrorCode::TASK_EXECUTION_FAILED));
+```
+
     // ========== 构造与析构 ==========
     
     Task();
@@ -220,7 +232,7 @@ public:
     
     // ========== 任务执行 ==========
     
-    tl::expected<TaskResult, std::string> execute(
+    TaskResult execute(
         const std::string &input = ""
     );
     
@@ -255,11 +267,11 @@ private:
 ### 接口说明：取消（cancel）行为说明
 
 - `cancel()`（Published -> Cancelled）：仅当任务处于 `Published` 状态时成功执行，
-    会将状态原子性地设置为 `Cancelled` 并触发 `on_cancelled` 信号。
+    会将状态原子性地设置为 `Cancelled` 并触发 `sig_cancelled` 信号。
 - 如果任务处于 `Claimed`、`Processing` 或其他非 `Published` 状态，
     调用 `cancel()` 将返回错误（`ErrorCode::TASK_STATUS_INVALID`），**不会**强制中断处理函数。
 - 对于已被申领或正在处理的任务，应使用 `request_cancel(reason)`（平台会在 `cancel_task` 中发起），
-    以实现协作式取消（`is_cancel_requested()` / `on_cancel_requested`）。
+    以实现协作式取消（`is_cancel_requested()` / `sig_cancel_requested`）。
 
 **示例**：
 
@@ -320,7 +332,7 @@ task.set_title("数据处理任务")
     .set_handler([](Task &t, const auto &input) {
         t.set_progress(50);
         // ... 业务逻辑
-        return TaskResult{true, "完成"};
+        return TaskResult("完成");
     });
 
 // 监听状态变化
@@ -462,7 +474,7 @@ auto task = platform->task_builder()
     .deadline_in(std::chrono::hours(24))
     .handler([](Task &t, const auto &input) {
         // 业务逻辑
-        return TaskResult{true, "完成"};
+        return TaskResult("完成");
     })
     .build_and_publish();
 ```
@@ -593,7 +605,7 @@ public:
     xswl::signal_t<const std::shared_ptr<Task>&> &sig_task_started();
     xswl::signal_t<const TaskId&, int> &sig_progress_updated();
     xswl::signal_t<const std::shared_ptr<Task>&, const TaskResult&> &sig_task_completed();
-    xswl::signal_t<const std::shared_ptr<Task>&, const std::string&> &sig_task_failed();
+    xswl::signal_t<const std::shared_ptr<Task>&, const Error&> &sig_task_failed();
     xswl::signal_t<const std::shared_ptr<Task>&, const std::string&> &sig_task_abandoned();
     xswl::signal_t<ClaimerStatus> &sig_status_changed();
     
@@ -813,7 +825,7 @@ auto task = platform->task_builder()
     .title("数据处理")
     .priority(5)
     .handler([](Task &t, const auto &input) {
-        return TaskResult{true, "完成"};
+        return TaskResult("完成");
     })
     .build_and_publish();
 
@@ -1407,7 +1419,7 @@ auto task = platform->task_builder()
     .allowed_claimer("trusted-worker-002")    // 或这个
     .handler([](Task &t, const auto &input) {
         // 处理敏感数据
-        return TaskResult{true, "完成"};
+        return TaskResult("完成");
     })
     .build_and_publish();
 
@@ -1546,7 +1558,7 @@ auto task = platform->task_builder()
         "team-lead-blockchain"
     })
     .handler([](Task &t, const auto &input) {
-        return TaskResult{true, "合约已通过审核"};
+        return TaskResult("合约已通过审核");
     })
     .build_and_publish();
 ```
@@ -1565,7 +1577,7 @@ auto task = platform->task_builder()
         "on-vacation-worker"
     })
     .handler([](Task &t, const auto &input) {
-        return TaskResult{true, "数据清洗完成"};
+        return TaskResult("数据清洗完成");
     })
     .build_and_publish();
 ```

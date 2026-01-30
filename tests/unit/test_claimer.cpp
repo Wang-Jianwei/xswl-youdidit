@@ -74,7 +74,7 @@ void test_set_status_with_signal() {
     ClaimerStatus old_status_captured = ClaimerStatus::Idle;
     ClaimerStatus new_status_captured = ClaimerStatus::Idle;
     
-    claimer.on_status_changed.connect([&](Claimer &, ClaimerStatus old_s, ClaimerStatus new_s) {
+    claimer.sig_status_changed.connect([&](Claimer &, ClaimerStatus old_s, ClaimerStatus new_s) {
         signal_emitted = true;
         old_status_captured = old_s;
         new_status_captured = new_s;
@@ -175,14 +175,14 @@ void test_claim_single_task() {
                       .category("development")
                       .priority(80)
                       .handler([](Task&, const std::string &) {
-                          return TaskResult(true, "Success");
+                          return TaskResult("Success");
                       })
                       .build_and_publish();
     
     assert_true(task != nullptr, "Task should be created");
     
     bool claim_signal_emitted = false;
-    claimer.on_task_claimed.connect([&](Claimer &, std::shared_ptr<Task>) {
+    claimer.sig_task_claimed.connect([&](Claimer &, std::shared_ptr<Task>) {
         claim_signal_emitted = true;
     });
     
@@ -210,17 +210,17 @@ void test_max_concurrent_limit() {
     TaskBuilder builder;
     auto task1 = builder.title("Task 1")
                        .category("test")
-                       .handler([](Task&, const std::string &) { return TaskResult(true, ""); })
+                       .handler([](Task&, const std::string &) { return TaskResult(""); })
                        .build_and_publish();
     builder.reset();
     auto task2 = builder.title("Task 2")
                        .category("test")
-                       .handler([](Task&, const std::string &) { return TaskResult(true, ""); })
+                       .handler([](Task&, const std::string &) { return TaskResult(""); })
                        .build_and_publish();
     builder.reset();
     auto task3 = builder.title("Task 3")
                        .category("test")
-                       .handler([](Task&, const std::string &) { return TaskResult(true, ""); })
+                       .handler([](Task&, const std::string &) { return TaskResult(""); })
                        .build_and_publish();
     
     // 申领前两个任务应该成功
@@ -251,7 +251,7 @@ void test_permission_blacklist() {
     auto task = builder.title("Restricted Task")
                       .category("test")
                       .blacklist("claimer-009")
-                      .handler([](Task&, const std::string &) { return TaskResult(true, ""); })
+                      .handler([](Task&, const std::string &) { return TaskResult(""); })
                       .build_and_publish();
     
     auto result = claimer.claim_task(task);
@@ -277,7 +277,7 @@ void test_permission_whitelist() {
     auto task = builder.title("Exclusive Task")
                       .category("test")
                       .whitelist("claimer-010-a")
-                      .handler([](Task&, const std::string &) { return TaskResult(true, ""); })
+                      .handler([](Task&, const std::string &) { return TaskResult(""); })
                       .build_and_publish();
     
     auto result1 = claimer1.claim_task(task);
@@ -306,7 +306,7 @@ void test_run_task() {
                       .category("compute")
                       .handler([&](Task&, const std::string &input) {
                           handler_called = true;
-                          return TaskResult(true, "Computed: " + input);
+                          return TaskResult("Computed: " + input);
                       })
                       .build_and_publish();
     
@@ -315,21 +315,21 @@ void test_run_task() {
     bool started_signal = false;
     bool completed_signal = false;
     
-    claimer.on_task_started.connect([&](Claimer &, std::shared_ptr<Task>) {
+    claimer.sig_task_started.connect([&](Claimer &, std::shared_ptr<Task>) {
         started_signal = true;
     });
     
-    claimer.on_task_completed.connect([&](Claimer &, std::shared_ptr<Task>, const TaskResult &) {
+    claimer.sig_task_completed.connect([&](Claimer &, std::shared_ptr<Task>, const TaskResult &) {
         completed_signal = true;
     });
     
     auto result = claimer.run_task(task, "test-input");
     
-    assert_true(result.has_value(), "Execution should succeed");
+    assert_true(result.ok(), "Execution should succeed");
     assert_true(handler_called, "Handler should be called");
     assert_true(started_signal, "Started signal should be emitted");
     assert_true(completed_signal, "Completed signal should be emitted");
-    assert_equal(result.value().summary, "Computed: test-input", "Output should match");
+    assert_equal(result.summary, "Computed: test-input", "Output should match");
     assert_equal(claimer.total_completed(), 1, "Total completed should be 1");
     
     std::cout << "PASSED" << std::endl;
@@ -345,17 +345,17 @@ void test_complete_task() {
     TaskBuilder builder;
     auto task = builder.title("Task to Complete")
                       .category("test")
-                      .handler([](Task&, const std::string &) { return TaskResult(true, ""); })
+                      .handler([](Task&, const std::string &) { return TaskResult(""); })
                       .build_and_publish();
     
     claimer.claim_task(task);
     
     bool completed_signal = false;
-    claimer.on_task_completed.connect([&](Claimer &, std::shared_ptr<Task>, const TaskResult &) {
+    claimer.sig_task_completed.connect([&](Claimer &, std::shared_ptr<Task>, const TaskResult &) {
         completed_signal = true;
     });
     
-    TaskResult result(true, "Done");
+    TaskResult result("Done");
     auto complete_result = claimer.complete_task(task->id(), result);
     
     std::cout << "Task status: " << static_cast<int>(task->status()) << " (Expected: " << static_cast<int>(TaskStatus::Completed) << ")" << std::endl;
@@ -379,14 +379,14 @@ void test_abandon_task() {
     TaskBuilder builder;
     auto task = builder.title("Task to Abandon")
                       .category("test")
-                      .handler([](Task&, const std::string &) { return TaskResult(true, ""); })
+                      .handler([](Task&, const std::string &) { return TaskResult(""); })
                       .build_and_publish();
     
     claimer.claim_task(task);
     assert_equal(claimer.active_task_count(), 1, "Active count should be 1");
     
     bool abandoned_signal = false;
-    claimer.on_task_abandoned.connect([&](Claimer &, std::shared_ptr<Task>, const std::string &) {
+    claimer.sig_task_abandoned.connect([&](Claimer &, std::shared_ptr<Task>, const std::string &) {
         abandoned_signal = true;
     });
     
@@ -411,7 +411,7 @@ void test_pause_resume_task() {
     TaskBuilder builder;
     auto task = builder.title("Task to Pause")
                       .category("test")
-                      .handler([](Task&, const std::string &) { return TaskResult(true, ""); })
+                      .handler([](Task&, const std::string &) { return TaskResult(""); })
                       .build_and_publish();
     
     claimer.claim_task(task);
@@ -438,12 +438,12 @@ void test_task_query_methods() {
     TaskBuilder builder;
     auto task1 = builder.title("Task 1")
                        .category("test")
-                       .handler([](Task&, const std::string &) { return TaskResult(true, ""); })
+                       .handler([](Task&, const std::string &) { return TaskResult(""); })
                        .build_and_publish();
     builder.reset();
     auto task2 = builder.title("Task 2")
                        .category("test")
-                       .handler([](Task&, const std::string &) { return TaskResult(true, ""); })
+                       .handler([](Task&, const std::string &) { return TaskResult(""); })
                        .build_and_publish();
     
     claimer.claim_task(task1);
@@ -487,7 +487,7 @@ void test_match_score_calculation() {
                        .category("backend")
                        .priority(100)
                        .add_tag("backend")
-                       .handler([](Task&, const std::string &) { return TaskResult(true, ""); })
+                       .handler([](Task&, const std::string &) { return TaskResult(""); })
                        .build();
     
     int score1 = claimer.calculate_match_score(task1);
@@ -498,7 +498,7 @@ void test_match_score_calculation() {
     auto task2 = builder.title("Frontend Task")
                        .category("frontend")
                        .priority(0)
-                       .handler([](Task&, const std::string &) { return TaskResult(true, ""); })
+                       .handler([](Task&, const std::string &) { return TaskResult(""); })
                        .build();
     
     int score2 = claimer.calculate_match_score(task2);

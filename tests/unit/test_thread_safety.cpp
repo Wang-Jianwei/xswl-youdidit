@@ -16,7 +16,7 @@ int main() {
                     .category("general")
                     .priority(50)
                     .handler([](Task &, const std::string &) {
-                        return TaskResult(true, "ok");
+                        return TaskResult("ok");
                     })
                     .build_and_publish();
     platform.publish_task(task);

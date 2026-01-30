@@ -13,8 +13,8 @@ std::shared_ptr<Task> publish_task(TaskPlatform &platform,
            .description("multi claimer example")
            .priority(priority)
            .category(category)
-           .handler([](Task & /*task*/, const std::string &input) -> tl::expected<TaskResult, std::string> {
-               TaskResult r(true, "done: " + input);
+           .handler([](Task & /*task*/, const std::string &input) -> TaskResult {
+               TaskResult r("done: " + input);
                return r;
            });
     auto task = builder.build();

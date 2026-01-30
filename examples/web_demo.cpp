@@ -166,7 +166,7 @@ int main(int argc, char** argv) {
             builder.title(task_type.name + " #" + std::to_string(task_id))
                    .category(task_type.category)
                    .priority(task_type.priority)
-                   .handler([duration_ms, success_threshold, success_dist](Task&, const std::string&) mutable -> tl::expected<TaskResult, std::string> {
+                   .handler([duration_ms, success_threshold, success_dist](Task&, const std::string&) mutable -> TaskResult {
                        // 模拟任务处理
                        std::this_thread::sleep_for(std::chrono::milliseconds(duration_ms));
                        
@@ -175,10 +175,10 @@ int main(int argc, char** argv) {
                        bool success = success_dist(rd_local) < success_threshold;
                        
                        if (success) {
-                           TaskResult result(true, "成功完成");
+                           TaskResult result("成功完成");
                            return result;
                        } else {
-                           return tl::unexpected<std::string>("处理失败");
+                           return Error("处理失败", ErrorCode::TASK_EXECUTION_FAILED);
                        }
                    });
             

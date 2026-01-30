@@ -123,7 +123,7 @@ public:
     xswl::signal_t<const std::shared_ptr<Task>&> sig_task_claimed;
     xswl::signal_t<const std::shared_ptr<Task>&> sig_task_started;
     xswl::signal_t<const std::shared_ptr<Task>&, const TaskResult&> sig_task_completed;
-    xswl::signal_t<const std::shared_ptr<Task>&, const std::string&> sig_task_failed;
+    xswl::signal_t<const std::shared_ptr<Task>&, const Error&> sig_task_failed;
     xswl::signal_t<const std::shared_ptr<Task>&> sig_task_cancelled;
     /**
      * @brief 当对正在执行/已申领任务发出取消请求时触发（参数：task, reason）

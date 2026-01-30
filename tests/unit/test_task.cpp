@@ -113,7 +113,7 @@ bool test_progress_update() {
     bool signal_triggered = false;
     int received_progress = -1;
     
-    task.on_progress_updated.connect([&](Task &, int progress) {
+    task.sig_progress_updated.connect([&](Task &, int progress) {
         signal_triggered = true;
         received_progress = progress;
     });
@@ -187,7 +187,7 @@ bool test_status_change_signals() {
     TaskStatus old_status = TaskStatus::Draft;
     TaskStatus new_status = TaskStatus::Draft;
     
-    task.on_status_changed.connect([&](Task &, TaskStatus old_s, TaskStatus new_s) {
+    task.sig_status_changed.connect([&](Task &, TaskStatus old_s, TaskStatus new_s) {
         status_changed = true;
         old_status = old_s;
         new_status = new_s;
@@ -250,17 +250,17 @@ bool test_blacklist_overrides_whitelist() {
 bool test_task_execution_success() {
     Task task;
     
-    task.set_handler([](Task &t, const std::string &) -> tl::expected<TaskResult, std::string> {
+    task.set_handler([](Task &t, const std::string &) -> TaskResult {
         t.set_progress(50);
-        return TaskResult{true, "Task completed successfully"};
+        return TaskResult("Task completed successfully");
     });
     
     task.set_status(TaskStatus::Published);
     task.set_status(TaskStatus::Claimed);
     
-    auto result = task.execute("test_input");
-    TEST_ASSERT(result.has_value(), "Execution should succeed");
-    TEST_ASSERT(result.value().success, "Task result should indicate success");
+    TaskResult result = task.execute("test_input");
+    TEST_ASSERT(result.ok(), "Execution should succeed");
+    TEST_ASSERT(result.summary == "Task completed successfully", "Task result should indicate success");
     TEST_ASSERT(task.status() == TaskStatus::Completed, "Status should be Completed");
     TEST_ASSERT(task.progress() == 100, "Progress should be 100");
     
@@ -271,15 +271,15 @@ bool test_task_execution_success() {
 bool test_task_execution_failure() {
     Task task;
     
-    task.set_handler([](Task &, const std::string &) -> tl::expected<TaskResult, std::string> {
-        return tl::make_unexpected(std::string("Execution failed"));
+    task.set_handler([](Task &, const std::string &) -> TaskResult {
+        return Error("Execution failed", ErrorCode::TASK_EXECUTION_FAILED);
     });
     
     task.set_status(TaskStatus::Published);
     task.set_status(TaskStatus::Claimed);
     
-    auto result = task.execute("test_input");
-    TEST_ASSERT(!result.has_value(), "Execution should fail");
+    TaskResult result = task.execute("test_input");
+    TEST_ASSERT(!result.ok(), "Execution should fail");
     TEST_ASSERT(task.status() == TaskStatus::Failed, "Status should be Failed");
     
     return true;
@@ -291,19 +291,19 @@ bool test_task_execution_signals() {
     
     bool started_signal = false;
     bool completed_signal = false;
-    TaskResult received_result{false, ""};
+    TaskResult received_result;
     
-    task.on_started.connect([&](Task &) {
+    task.sig_started.connect([&](Task &) {
         started_signal = true;
     });
     
-    task.on_completed.connect([&](Task &, const TaskResult &result) {
+    task.sig_completed.connect([&](Task &, const TaskResult &result) {
         completed_signal = true;
         received_result = result;
     });
     
-    task.set_handler([](Task &, const std::string &) -> tl::expected<TaskResult, std::string> {
-        return TaskResult{true, "Completed"};
+    task.set_handler([](Task &, const std::string &) -> TaskResult {
+        return TaskResult("Completed");
     });
     
     task.set_status(TaskStatus::Published);
@@ -312,7 +312,7 @@ bool test_task_execution_signals() {
     
     TEST_ASSERT(started_signal, "Started signal should be triggered");
     TEST_ASSERT(completed_signal, "Completed signal should be triggered");
-    TEST_ASSERT(received_result.success, "Received result should indicate success");
+    TEST_ASSERT(received_result.ok(), "Received result should indicate success");
     
     return true;
 }
@@ -339,7 +339,7 @@ bool test_request_cancel_signal_and_flag() {
     bool signal_triggered = false;
     std::string received_reason;
 
-    task.on_cancel_requested.connect([&](Task &, const std::string &reason) {
+    task.sig_cancel_requested.connect([&](Task &, const std::string &reason) {
         signal_triggered = true;
         received_reason = reason;
     });
@@ -351,7 +351,7 @@ bool test_request_cancel_signal_and_flag() {
     auto res = task.request_cancel("publisher_cancel");
     TEST_ASSERT(res.has_value(), "request_cancel should succeed");
     TEST_ASSERT(task.is_cancel_requested(), "is_cancel_requested should be true");
-    TEST_ASSERT(signal_triggered, "on_cancel_requested should be triggered");
+    TEST_ASSERT(signal_triggered, "sig_cancel_requested should be triggered");
     TEST_ASSERT(received_reason == "publisher_cancel", "Reason should match");
 
     auto md = task.metadata();
@@ -368,7 +368,7 @@ bool test_cancel_published_task_direct() {
     Task task;
 
     bool cancelled_signal = false;
-    task.on_cancelled.connect([&](Task &) {
+    task.sig_cancelled.connect([&](Task &) {
         cancelled_signal = true;
     });
 
@@ -376,7 +376,7 @@ bool test_cancel_published_task_direct() {
 
     auto res = task.cancel();
     TEST_ASSERT(res.has_value(), "cancel() should succeed when Published");
-    TEST_ASSERT(cancelled_signal, "on_cancelled should be emitted");
+    TEST_ASSERT(cancelled_signal, "sig_cancelled should be emitted");
     TEST_ASSERT(task.status() == TaskStatus::Cancelled, "Status should be Cancelled");
 
     return true;
@@ -406,14 +406,14 @@ bool test_cancel_on_claimed_or_processing_should_fail() {
 bool test_handler_obeys_cancel_request() {
     Task task;
 
-    task.set_handler([](Task &t, const std::string &) -> tl::expected<TaskResult, std::string> {
+    task.set_handler([](Task &t, const std::string &) -> TaskResult {
         for (int i = 0; i < 50; ++i) {
             if (t.is_cancel_requested()) {
-                return tl::make_unexpected(std::string("cancelled"));
+                return Error("cancelled", ErrorCode::TASK_EXECUTION_FAILED);
             }
             std::this_thread::sleep_for(std::chrono::milliseconds(5));
         }
-        return TaskResult{true, "completed"};
+        return TaskResult("completed");
     });
 
     task.set_status(TaskStatus::Published);
@@ -424,7 +424,7 @@ bool test_handler_obeys_cancel_request() {
 
     std::thread runner([&]() {
         auto result = task.execute("input");
-        if (!result.has_value()) {
+        if (!result.ok()) {
             exec_failed.store(true, std::memory_order_release);
         }
         exec_done.store(true, std::memory_order_release);
