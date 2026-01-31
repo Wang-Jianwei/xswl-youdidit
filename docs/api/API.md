@@ -126,13 +126,13 @@ public:
         const std::string &input
     )>;
 
-    **注意**：`TaskHandler` 现在直接返回 `TaskResult`；若处理失败，请返回 `TaskResult::Failure(Error(...))`，例如：
+    **注意**：`TaskHandler` 现在直接返回 `TaskResult`；若处理失败，请返回 `TaskResult(Error(...))`，例如：
 
 ```cpp
-return TaskResult::Failure(Error("处理失败原因", ErrorCode::TASK_EXECUTION_FAILED));
+return TaskResult(Error("处理失败原因", ErrorCode::TASK_EXECUTION_FAILED));
 ```
 
-    **注意**：`TaskHandler` 现在直接返回 `TaskResult`；若处理失败，请返回 `TaskResult::Failure(Error(...))`，例如：
+    **注意**：`TaskHandler` 现在直接返回 `TaskResult`；若处理失败，请返回 `TaskResult(Error(...))`，例如：
 
 ```cpp
 return tl::make_unexpected(Error("处理失败原因", ErrorCode::TASK_EXECUTION_FAILED));
