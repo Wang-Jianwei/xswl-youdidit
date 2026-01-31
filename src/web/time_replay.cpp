@@ -1,8 +1,5 @@
-// Backup of original src/web/time_replay.cpp
-// Moved to web/src/time_replay.cpp during migration to web/ subproject.
-// Kept here as legacy backup; do not use directly.
+/* DEPRECATED: Moved to `web/src/time_replay.cpp`. See web/legacy/ for backup. */
 
-#include <xswl/youdidit/web/time_replay.hpp>
 
 namespace xswl {
 namespace youdidit {

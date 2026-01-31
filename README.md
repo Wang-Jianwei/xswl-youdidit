@@ -169,6 +169,9 @@ cmake .. -DBUILD_WEB=ON
 # 如果需要构建 Web 的示例或测试（在 Windows 下默认关闭）
 # cmake .. -DBUILD_WEB=ON -DBUILD_WEB_EXAMPLES=ON -DBUILD_WEB_TESTS=ON
 
+# 指定构建类型（单配置生成器）
+# cmake .. -DCMAKE_BUILD_TYPE=Release
+
 # 编译（使用多核加速）
 make -j$(nproc)
 
@@ -193,6 +196,18 @@ make -j$(nproc)
 
 # 或使用 CTest 运行所有测试
 ctest --output-on-failure
+```
+
+注意：如果使用仓库提供的 Windows 脚本 `build_and_test.ps1`，可以如下强制构建 Web 或指定构建类型：
+
+```powershell
+# 强制构建 Web（默认在不兼容工具链上会跳过）
+.\build_and_test.ps1 -ForceWeb
+# 或通过环境变量
+$env:FORCE_BUILD_WEB = '1'; .\build_and_test.ps1
+
+# 指定构建类型（Debug / Release / RelWithDebInfo / MinSizeRel）
+.\build_and_test.ps1 -BuildType Debug
 ```
 
 **编译要求**:

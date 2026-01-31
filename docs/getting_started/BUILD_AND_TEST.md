@@ -233,6 +233,20 @@ cmake .. -DBUILD_WEB=ON -DBUILD_WEB_EXAMPLES=ON -DBUILD_WEB_TESTS=ON
 cmake --build . -j$(nproc)
 ```
 
+### 强制构建 Web 与指定构建类型
+
+我们在 `build_and_test.ps1` 中实现了自动检测逻辑：在 Windows 或旧编译器上默认会跳过 Web 模块以避免平台不兼容问题。若您确实想在当前环境强制构建 Web，可以：
+
+```powershell
+# 强制构建 Web（PowerShell）
+.\build_and_test.ps1 -ForceWeb
+# 或设置环境变量再运行
+$env:FORCE_BUILD_WEB = '1'; .\build_and_test.ps1
+
+# 指定构建类型（Debug / Release / RelWithDebInfo / MinSizeRel）
+.\build_and_test.ps1 -BuildType Debug
+```
+
 > ⚠️ 注意（Windows）：由于部分第三方库（例如内嵌的 cpp-httplib）对 Windows SDK 有特定要求，默认在 Windows 工具链上关闭 `BUILD_WEB_EXAMPLES` 和 `BUILD_WEB_TESTS`，以避免阻塞主构建。若你需要在 Windows 上开启测试/示例，请确保所用工具链和 Windows SDK 支持 Winsock 与相关 API（或手动链接 `ws2_32` / `iphlpapi`）。
 
 ### 手动运行测试

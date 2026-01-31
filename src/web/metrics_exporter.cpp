@@ -1,9 +1,5 @@
-// Backup of original src/web/metrics_exporter.cpp
-// Moved to web/src/metrics_exporter.cpp during migration to web/ subproject.
-// Kept here as legacy backup; do not use directly.
+/* DEPRECATED: Moved to `web/src/metrics_exporter.cpp`. See web/legacy/ for backup. */
 
-#include <xswl/youdidit/web/metrics_exporter.hpp>
-#include <sstream>
 
 namespace xswl {
 namespace youdidit {
