@@ -123,7 +123,10 @@ git submodule update --init --recursive
 
 #### 清理构建产物
 ```bash
-./clean.sh
+# 交互式清理：
+./build_and_test.sh --clean
+# 非交互或 CI 环境强制清理：
+FORCE_CLEAN=1 ./build_and_test.sh --clean
 ```
 
 #### 详细的测试分析（Python）

@@ -8,7 +8,6 @@
 |--------|------|------|---------|
 | `build_and_test.sh` | 6.7K | 功能完整的主脚本，支持多种选项 | ✅ |
 | `quick_test.sh` | 1.5K | 快速验证脚本，编译与基础测试 | ✅ |
-| `clean.sh` | 740B | 清理脚本，安全删除构建产物 | ✅ |
 
 ### Python 脚本文件
 
@@ -40,7 +39,7 @@
 ├── 构建测试脚本
 │   ├── build_and_test.sh        ← 主脚本，支持完整选项
 │   ├── quick_test.sh             ← 快速验证脚本
-│   └── clean.sh                  ← 清理脚本
+│   └── (清理功能已合并到 `build_and_test.sh --clean`)                  
 │
 ├── 分析工具
 │   └── analyze_tests.py          ← Python 测试分析工具
@@ -66,8 +65,8 @@
 # 生成详细报告
 python3 analyze_tests.py build
 
-# 清理产物
-./clean.sh
+# 清理产物（交互式）
+./build_and_test.sh --clean
 
 # 常用组合
 ./build_and_test.sh --clean --unit    # 清空后仅单元测试
@@ -107,10 +106,8 @@ python3 analyze_tests.py build
 - [x] 简洁输出
 - [x] 最小化耗时
 
-### clean.sh 功能
-- [x] 交互式确认
-- [x] 安全删除
-- [x] 反馈输出
+### 清理功能（已合并）
+交互式清理功能已合并到 `build_and_test.sh --clean`。在交互式终端将提示确认；在非交互环境或设置 `FORCE_CLEAN=1` 时会直接删除。
 
 ### analyze_tests.py 功能
 - [x] 完整测试套件执行
