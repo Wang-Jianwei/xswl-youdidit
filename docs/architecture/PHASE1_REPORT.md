@@ -82,7 +82,7 @@ xswl-youdidit/
 | `TaskId` | 任务唯一标识符 | ✓ |
 | `Timestamp` | 时间戳类型 | ✓ |
 | `TaskStatus` | 任务状态枚举（9种状态） | ✓ |
-| `ClaimerStatus` | 申领者状态枚举（4种状态） | ✓ |
+| `ClaimerState` | 申领者状态结构（正交属性） | ✓ |
 | `TaskResult` | 任务执行结果结构体 | ✓ |
 | `Error` | 错误信息结构体 | ✓ |
 | `ErrorCode` | 错误码常量（12个错误码） | ✓ |
@@ -101,8 +101,8 @@ Running types unit tests...
 ===========================================
 ✓ test_task_status_to_string passed
 ✓ test_task_status_from_string passed
-✓ test_claimer_status_to_string passed
-✓ test_claimer_status_from_string passed
+✓ test_claimer_state_to_string passed
+✓ test_claimer_state_from_string passed
 ✓ test_task_result passed
 ✓ test_error passed
 ✓ test_error_codes passed

@@ -122,8 +122,9 @@ public:
 
     tl::expected<void, Error> execute_task(const TaskId &task_id, const std::string &input = "");
 
-    Claimer &set_status(ClaimerStatus status);
-    bool can_claim_more() const noexcept;
+    ClaimerState status() const noexcept; 
+    // set_status 已移除：使用 set_paused()/set_offline()/set_max_concurrent() 等方法
+    bool can_claim_more() const noexcept; 
 };
 ```
 

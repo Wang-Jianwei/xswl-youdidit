@@ -58,20 +58,14 @@ public:
           total_abandoned_(0),
           platform_(nullptr) {}
     
-    // 计算当前状态
-    ClaimerStatus calculate_status() const noexcept {
-        if (offline_.load(std::memory_order_acquire)) {
-            return ClaimerStatus::Offline;
-        }
-        if (paused_.load(std::memory_order_acquire)) {
-            return ClaimerStatus::Paused;
-        }
-        int active = active_task_count_.load(std::memory_order_acquire);
-        int max_concurrent = max_concurrent_tasks_.load(std::memory_order_acquire);
-        if (active >= max_concurrent) {
-            return ClaimerStatus::Busy;
-        }
-        return ClaimerStatus::Idle;
+    // 计算当前状态（返回描述性结构）
+    ClaimerState calculate_state() const noexcept {
+        ClaimerState s;
+        s.online = !offline_.load(std::memory_order_acquire);
+        s.accepting_new_tasks = !paused_.load(std::memory_order_acquire);
+        s.active_task_count = active_task_count_.load(std::memory_order_acquire);
+        s.max_concurrent = max_concurrent_tasks_.load(std::memory_order_acquire);
+        return s;
     }
 };
 
@@ -95,8 +89,8 @@ std::string Claimer::name() const {
     return d->name_;  // 返回副本，线程安全
 }
 
-ClaimerStatus Claimer::status() const noexcept {
-    return d->calculate_status();  // 状态现在是计算属性
+ClaimerState Claimer::status() const noexcept {
+    return d->calculate_state();  // 状态现在是描述性结构
 }
 
 int Claimer::max_concurrent_tasks() const noexcept {
@@ -163,68 +157,39 @@ Claimer &Claimer::set_name(const std::string &name) {
     return *this;
 }
 
-Claimer &Claimer::set_status(ClaimerStatus new_status) {
-    // 已废弃：手动设置状态
-    // 兼容旧代码：根据传入的状态设置对应的标志
-    ClaimerStatus old_status = status();
-    
-    switch (new_status) {
-        case ClaimerStatus::Offline:
-            d->offline_.store(true, std::memory_order_release);
-            d->paused_.store(false, std::memory_order_release);
-            break;
-        case ClaimerStatus::Paused:
-            d->paused_.store(true, std::memory_order_release);
-            d->offline_.store(false, std::memory_order_release);
-            break;
-        case ClaimerStatus::Idle:
-        case ClaimerStatus::Busy:
-            // Idle 和 Busy 现在是自动计算的，只清除 paused 和 offline 标志
-            d->paused_.store(false, std::memory_order_release);
-            d->offline_.store(false, std::memory_order_release);
-            break;
-    }
-    
-    ClaimerStatus actual_new_status = status();
-    if (old_status != actual_new_status) {
-        emit sig_status_changed(*this, old_status, actual_new_status);
-    }
-    return *this;
-}
-
 Claimer &Claimer::set_paused(bool paused) {
-    ClaimerStatus old_status = status();
+    ClaimerState old_state = status();
     d->paused_.store(paused, std::memory_order_release);
     if (paused) {
         d->offline_.store(false, std::memory_order_release);  // 互斥
     }
-    ClaimerStatus new_status = status();
-    if (old_status != new_status) {
-        emit sig_status_changed(*this, old_status, new_status);
+    ClaimerState new_state = status();
+    if (!(old_state == new_state)) {
+        emit sig_status_changed(*this, old_state, new_state);
     }
     return *this;
 }
 
 Claimer &Claimer::set_offline(bool offline) {
-    ClaimerStatus old_status = status();
+    ClaimerState old_state = status();
     d->offline_.store(offline, std::memory_order_release);
     if (offline) {
         d->paused_.store(false, std::memory_order_release);  // 互斥
     }
-    ClaimerStatus new_status = status();
-    if (old_status != new_status) {
-        emit sig_status_changed(*this, old_status, new_status);
+    ClaimerState new_state = status();
+    if (!(old_state == new_state)) {
+        emit sig_status_changed(*this, old_state, new_state);
     }
     return *this;
 }
 
 Claimer &Claimer::set_max_concurrent(int max_concurrent) {
-    ClaimerStatus old_status = status();
+    ClaimerState old_state = status();
     d->max_concurrent_tasks_.store(max_concurrent, std::memory_order_release);
-    ClaimerStatus new_status = status();
+    ClaimerState new_state = status();
     // 修改并发数可能会改变 Idle/Busy 状态
-    if (old_status != new_status) {
-        emit sig_status_changed(*this, old_status, new_status);
+    if (!(old_state == new_state)) {
+        emit sig_status_changed(*this, old_state, new_state);
     }
     return *this;
 }

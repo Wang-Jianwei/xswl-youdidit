@@ -36,23 +36,40 @@ void test_task_status_from_string() {
     std::cout << "✓ test_task_status_from_string passed" << std::endl;
 }
 
-void test_claimer_status_to_string() {
-    assert(to_string(ClaimerStatus::Idle) == "Idle");
-    assert(to_string(ClaimerStatus::Busy) == "Busy");
-    assert(to_string(ClaimerStatus::Offline) == "Offline");
-    assert(to_string(ClaimerStatus::Paused) == "Paused");
-    std::cout << "✓ test_claimer_status_to_string passed" << std::endl;
+void test_claimer_state_to_string() {
+    ClaimerState s;
+    // 默认表示 Idle
+    assert(to_string(s) == "Idle");
+    // Busy
+    ClaimerState busy; busy.active_task_count = 1; busy.max_concurrent = 1;
+    assert(to_string(busy) == "Busy");
+    // Paused
+    ClaimerState paused; paused.accepting_new_tasks = false;
+    assert(to_string(paused) == "Paused");
+    // Offline
+    ClaimerState offline; offline.online = false;
+    assert(to_string(offline) == "Offline");
+    // Working
+    ClaimerState w; w.active_task_count = 1; w.max_concurrent = 3;
+    assert(to_string(w) == "Working");
+
+    // Paused but still has active tasks -> 应仍被认为是在工作中，展示优先级为 Paused
+    ClaimerState pw; pw.accepting_new_tasks = false; pw.active_task_count = 1; pw.max_concurrent = 3;
+    assert(pw.is_working() == true);
+    assert(to_string(pw) == "Paused");
+
+    std::cout << "✓ test_claimer_state_to_string passed" << std::endl;
 }
 
-void test_claimer_status_from_string() {
-    auto status = claimer_status_from_string("Idle");
-    assert(status.has_value());
-    assert(status.value() == ClaimerStatus::Idle);
+void test_claimer_state_from_string() {
+    auto s = claimer_state_from_string("Idle");
+    assert(s.has_value());
+    assert(s->is_idle());
     
-    auto invalid = claimer_status_from_string("InvalidStatus");
+    auto invalid = claimer_state_from_string("InvalidStatus");
     assert(!invalid.has_value());
     
-    std::cout << "✓ test_claimer_status_from_string passed" << std::endl;
+    std::cout << "✓ test_claimer_state_from_string passed" << std::endl;
 }
 
 void test_task_result() {
@@ -117,8 +134,8 @@ int main() {
     
     test_task_status_to_string();
     test_task_status_from_string();
-    test_claimer_status_to_string();
-    test_claimer_status_from_string();
+    test_claimer_state_to_string();
+    test_claimer_state_from_string();
     test_task_result();
     test_error();
     test_error_codes();

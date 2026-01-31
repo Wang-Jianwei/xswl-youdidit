@@ -75,32 +75,54 @@ std::string to_string(TaskStatus status);
 tl::optional<TaskStatus> task_status_from_string(const std::string &str);
 
 /**
- * @brief 申领者状态枚举
- * 
- * 状态优先级（高到低）：Offline > Paused > Busy > Idle
+ * @brief 申领者状态结构（正交属性）
+ *
+ * 申领者真实状态由以下正交维度决定：
+ *  - 在线/离线（online）
+ *  - 是否接收新任务（accepting_new_tasks）
+ *  - 当前活跃任务数与最大并发（active_task_count / max_concurrent）
+ *
+ * 以下是常用的便捷判断：Idle / Working / Busy / Paused / Offline
  */
-enum class ClaimerStatus {
-    Idle,      ///< 空闲 - 可以申领新任务（active < max_concurrent）
-    Busy,      ///< 忙碌 - 已达到最大并发任务数（active >= max_concurrent）
-    Offline,   ///< 离线 - 完全不可用（网络断开、下班、系统维护）
-               ///<        不接受新任务，现有任务可能需要重新分配
-    Paused     ///< 暂停 - 临时暂停接收新任务（休息、处理紧急事务）
-               ///<        仍在线，可继续执行已申领的任务
+struct ClaimerState {
+    bool online{true};                      ///< 可用状态：true=在线，false=离线
+    bool accepting_new_tasks{true};         ///< 是否接收新任务：true=接收，false=暂停接收
+    int active_task_count{0};               ///< 当前活跃任务数
+    int max_concurrent{5};                  ///< 最大并发任务数（默认值）
+
+    // 只要在线且无活跃任务即视为闲置
+    bool is_idle() const noexcept { return online && accepting_new_tasks && active_task_count == 0; }
+    // 只要有活跃任务（active_task_count > 0）即视为工作中
+    bool is_working() const noexcept { return online && active_task_count > 0; }
+    // 只要活跃任务数达到最大并发即视为忙碌
+    bool is_busy() const noexcept { return online && active_task_count >= max_concurrent; }
+    // 在线但暂停接收新任务
+    bool is_paused() const noexcept { return online && !accepting_new_tasks; }
+    // 离线状态
+    bool is_offline() const noexcept { return !online; }
+
+    bool operator==(const ClaimerState &other) const noexcept {
+        return online == other.online && accepting_new_tasks == other.accepting_new_tasks
+            && active_task_count == other.active_task_count && max_concurrent == other.max_concurrent;
+    }
+    bool operator!=(const ClaimerState &other) const noexcept {
+        return !(*this == other);
+    }
 };
 
 /**
- * @brief 将申领者状态转换为字符串
- * @param status 申领者状态
- * @return 状态的字符串表示
+ * @brief 将申领者状态转换为字符串（根据优先级判断单一表现形式）
+ * @param state 申领者状态
+ * @return 状态的字符串表示："Offline" | "Paused" | "Busy" | "Working" | "Idle"
  */
-std::string to_string(ClaimerStatus status);
+std::string to_string(const ClaimerState &state);
 
 /**
- * @brief 从字符串解析申领者状态
+ * @brief 从字符串解析申领者状态（返回一个代表性的 ClaimerState）
  * @param str 状态字符串
  * @return 解析成功返回对应状态，失败返回空
  */
-tl::optional<ClaimerStatus> claimer_status_from_string(const std::string &str);
+tl::optional<ClaimerState> claimer_state_from_string(const std::string &str);
 
 // ========== 结构体类型 ==========
 

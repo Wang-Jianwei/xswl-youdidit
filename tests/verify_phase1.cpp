@@ -28,19 +28,21 @@ int main() {
     std::cout << "  Processing -> " << to_string(TaskStatus::Processing) << "\n";
     std::cout << "  Completed  -> " << to_string(TaskStatus::Completed) << "\n\n";
     
-    // 3. ClaimerStatus 测试
-    std::cout << "ClaimerStatus enumeration:\n";
-    std::cout << "  Idle    -> " << to_string(ClaimerStatus::Idle) << "\n";
-    std::cout << "  Busy    -> " << to_string(ClaimerStatus::Busy) << "\n";
-    std::cout << "  Offline -> " << to_string(ClaimerStatus::Offline) << "\n\n";
+    // 3. ClaimerState 示例
+    std::cout << "ClaimerState examples:\n";
+    std::cout << "  Idle    -> " << to_string(ClaimerState{}) << "\n";
+    ClaimerState busy; busy.active_task_count = 1; busy.max_concurrent = 1;
+    std::cout << "  Busy    -> " << to_string(busy) << "\n";
+    ClaimerState offline; offline.online = false;
+    std::cout << "  Offline -> " << to_string(offline) << "\n\n";
     
     // 4. TaskResult 测试
     std::cout << "TaskResult structure:\n";
-    TaskResult result(true, "Task executed successfully");
+    TaskResult result("Task executed successfully");
     // 将多个输出项合并为字符串（示例：可使用 JSON 或其他序列化格式）
     result.output = "output_file=/path/to/output.txt;execution_time=1.23s";
     
-    std::cout << "  Success: " << (result.success ? "Yes" : "No") << "\n";
+    std::cout << "  Success: " << (result.ok() ? "Yes" : "No") << "\n";
     std::cout << "  Summary: " << result.summary << "\n";
     std::cout << "  Output: " << result.output << "\n";
     std::cout << "\n";

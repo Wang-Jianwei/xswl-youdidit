@@ -52,7 +52,7 @@ public:
     struct ClaimerSummary {
         std::string id;
         std::string name;
-        ClaimerStatus status;
+        ClaimerState status;
         int active_task_count;
         int total_completed;
         int total_failed;

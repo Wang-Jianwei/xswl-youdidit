@@ -51,34 +51,28 @@ tl::optional<TaskStatus> task_status_from_string(const std::string &str) {
     return tl::nullopt;
 }
 
-// ========== ClaimerStatus 相关实现 ==========
+// ========== ClaimerState 相关实现 ==========
 
-std::string to_string(ClaimerStatus status) {
-    static const std::map<ClaimerStatus, std::string> status_map = {
-        {ClaimerStatus::Idle, "Idle"},
-        {ClaimerStatus::Busy, "Busy"},
-        {ClaimerStatus::Offline, "Offline"},
-        {ClaimerStatus::Paused, "Paused"}
-    };
-    
-    auto it = status_map.find(status);
-    if (it != status_map.end()) {
-        return it->second;
-    }
+std::string to_string(const ClaimerState &state) {
+    if (state.is_offline()) return "Offline";
+    if (state.is_paused()) return "Paused";
+    if (state.is_busy()) return "Busy";
+    if (state.is_working()) return "Working";
+    if (state.is_idle()) return "Idle";
     return "Unknown";
 }
 
-tl::optional<ClaimerStatus> claimer_status_from_string(const std::string &str) {
-    static const std::map<std::string, ClaimerStatus> string_map = {
-        {"Idle", ClaimerStatus::Idle},
-        {"Busy", ClaimerStatus::Busy},
-        {"Offline", ClaimerStatus::Offline},
-        {"Paused", ClaimerStatus::Paused}
-    };
-    
-    auto it = string_map.find(str);
-    if (it != string_map.end()) {
-        return it->second;
+tl::optional<ClaimerState> claimer_state_from_string(const std::string &str) {
+    if (str == "Idle") {
+        return ClaimerState{}; // defaults represent Idle
+    } else if (str == "Working") {
+        ClaimerState s; s.active_task_count = 1; s.max_concurrent = 2; return s;
+    } else if (str == "Busy") {
+        ClaimerState s; s.active_task_count = 1; s.max_concurrent = 1; return s;
+    } else if (str == "Paused") {
+        ClaimerState s; s.accepting_new_tasks = false; return s;
+    } else if (str == "Offline") {
+        ClaimerState s; s.online = false; return s;
     }
     return tl::nullopt;
 }

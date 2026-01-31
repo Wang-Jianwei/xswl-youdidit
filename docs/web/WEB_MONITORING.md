@@ -266,7 +266,7 @@ public:
         TaskAbandoned,       // 任务放弃
         PriorityChanged,     // 优先级变更
         ClaimerRegistered,   // 申领者注册
-        ClaimerStatusChanged // 申领者状态变更
+        ClaimerStateChanged // 申领者状态变更
     };
     
     // 事件记录结构

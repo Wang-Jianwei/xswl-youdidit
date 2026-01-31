@@ -259,11 +259,15 @@ enum class TaskStatus {
 };
 // 成员方法：to_string(), from_string()
 
-// 3. ClaimerStatus 枚举
-enum class ClaimerStatus {
-    Idle, Busy, Offline, Paused
+// 3. ClaimerState 结构
+struct ClaimerState {
+    bool online;
+    bool accepting_new_tasks;
+    int active_task_count;
+    int max_concurrent;
+    // 辅助方法：is_idle(), is_working(), is_busy(), is_paused(), is_offline()
 };
-// 成员方法：to_string(), from_string()
+// 工具函数：to_string(const ClaimerState&), claimer_state_from_string(...) 
 
 // 4. TaskResult 结构体
 struct TaskResult {
@@ -709,7 +713,7 @@ public:
 |----|------|------|
 | Task | status | `std::atomic<TaskStatus>` |
 | Task | progress | `std::atomic<int>` |
-| Claimer | status | `std::atomic<ClaimerStatus>` |
+| Claimer | status | `ClaimerState` |
 | Claimer | active_task_count | `std::atomic<int>` |
 | TaskPlatform | total_completed | `std::atomic<size_t>` |
 | TaskPlatform | total_failed | `std::atomic<size_t>` |
@@ -849,7 +853,7 @@ public:
         TaskPublished, TaskClaimed, TaskStarted,
         TaskProgressUpdated, TaskCompleted, TaskFailed,
         TaskAbandoned, PriorityChanged,
-        ClaimerRegistered, ClaimerStatusChanged
+        ClaimerRegistered, ClaimerStateChanged
     };
     
     struct EventRecord {
@@ -1614,7 +1618,7 @@ private:
 请执行任务 T1.3 核心类型定义：
 1. 创建 include/xswl/youdidit/core/types.hpp
 2. 定义 TaskId, Timestamp 类型别名
-3. 定义 TaskStatus, ClaimerStatus 枚举（含 to_string/from_string 方法）
+3. 定义 TaskStatus, ClaimerState（结构）与工具函数（to_string/claimer_state_from_string）
 4. 定义 TaskResult, Error 结构体
 5. 定义错误码常量
 6. 创建 src/core/types.cpp 实现文件

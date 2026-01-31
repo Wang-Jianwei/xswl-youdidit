@@ -60,23 +60,28 @@ std::string to_string() const;           // 转换为字符串
 static TaskStatus from_string(const std::string &str);  // 从字符串解析
 ```
 
-### ClaimerStatus
+### ClaimerState
 
 ```cpp
-enum class ClaimerStatus {
-    Idle,      // 空闲
-    Busy,      // 忙碌
-    Offline,   // 离线
-    Paused     // 暂停
+struct ClaimerState {
+    bool online;                // 在线/离线
+    bool accepting_new_tasks;   // 是否接收新任务（paused）
+    int active_task_count;      // 当前活跃任务数
+    int max_concurrent;         // 最大并发任务数
+    bool is_idle() const;
+    bool is_working() const;
+    bool is_busy() const;
+    bool is_paused() const;
+    bool is_offline() const;
 };
 ```
 
-申领者状态枚举。
+申领者状态描述结构（正交属性）。
 
-**成员方法：**
+**工具函数：**
 ```cpp
-std::string to_string() const;           // 转换为字符串
-static ClaimerStatus from_string(const std::string &str);  // 从字符串解析
+std::string to_string(const ClaimerState &state);          // 转换为字符串用于展示
+static tl::optional<ClaimerState> claimer_state_from_string(const std::string &str);  // 从字符串解析（返回代表性状态）
 ```
 
 ### TaskResult
@@ -506,7 +511,7 @@ public:
     
     // ========== 状态信息 ==========
     
-    ClaimerStatus status() const noexcept;                 // 线程安全，原子操作
+    ClaimerState status() const noexcept;                 // 线程安全，返回描述性状态结构
     int active_task_count() const noexcept;                // 线程安全，原子操作
     std::vector<TaskId> claimed_tasks() const;             // 线程安全，返回副本
     
@@ -531,7 +536,7 @@ public:
     Claimer &add_category(const std::string &category);
     Claimer &set_categories(const std::set<std::string> &categories);
     Claimer &set_max_concurrent(int max_count);            // 线程安全
-    Claimer &set_status(ClaimerStatus status);             // 线程安全
+    // set_status 已移除：使用 set_paused()/set_offline()/set_max_concurrent() 等方法
     
     // ========== 申领策略配置 ==========
     
@@ -607,7 +612,7 @@ public:
     xswl::signal_t<const std::shared_ptr<Task>&, const TaskResult&> &sig_task_completed();
     xswl::signal_t<const std::shared_ptr<Task>&, const Error&> &sig_task_failed();
     xswl::signal_t<const std::shared_ptr<Task>&, const std::string&> &sig_task_abandoned();
-    xswl::signal_t<ClaimerStatus> &sig_status_changed();
+    xswl::signal_t<ClaimerState> &sig_status_changed();
     
     // ========== 工具方法 ==========
     
@@ -735,7 +740,7 @@ public:
     bool has_claimer(const std::string &claimer_id) const;
     
     std::vector<std::shared_ptr<Claimer>> get_claimers() const;
-    std::vector<std::shared_ptr<Claimer>> get_claimers_by_status(ClaimerStatus status) const;
+    std::vector<std::shared_ptr<Claimer>> get_claimers_by_state(const ClaimerState &state) const; // 通过 ClaimerState 过滤申领者列表
     std::vector<std::shared_ptr<Claimer>> get_claimers_by_role(const std::string &role) const;
     
     size_t claimer_count() const;
@@ -1048,7 +1053,7 @@ void example_function() {
 class Claimer {
 public:
     // 基本操作 - 不抛出异常，使用简洁命名
-    ClaimerStatus status() const noexcept;
+    ClaimerState status() const noexcept;
     int active_task_count() const noexcept;
     std::string id() const noexcept;
     
@@ -1215,11 +1220,11 @@ public:
     // ========== Getter 方法 (noexcept, 简洁命名) ==========
     const std::string &id() const noexcept;
     const std::string &name() const noexcept;
-    ClaimerStatus status() const noexcept;
+    ClaimerState status() const noexcept;
     int active_task_count() const noexcept;
     
     // ========== Setter 方法 (返回引用用于链式调用) ==========
-    Claimer &set_status(ClaimerStatus status);
+    // set_status 已移除：使用 set_paused()/set_offline()/set_max_concurrent() 等方法
     Claimer &set_role(const std::string &role);
     Claimer &set_max_concurrent(int max_count);
     Claimer &add_skill(const std::string &skill);
@@ -1253,7 +1258,7 @@ claimer->set_role("DataProcessor")
        .set_max_concurrent(5);
 
 const std::string &name = claimer->name();     // 正确：简洁命名，右对齐引用
-ClaimerStatus status = claimer->status();      // 正确：noexcept 方法
+ClaimerState status = claimer->status();      // 正确：noexcept 方法
 
 auto result = claimer->claim_task("task-001");  // 返回 expected，不抛出异常
 if (result) {

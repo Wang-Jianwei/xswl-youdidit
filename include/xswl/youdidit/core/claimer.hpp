@@ -35,7 +35,7 @@ public:
     // ========== 基本属性 Getter ==========
     const std::string &id() const noexcept;  // ID不可变，返回引用安全
     std::string name() const;                 // 返回副本，线程安全
-    ClaimerStatus status() const noexcept;    // 计算属性，无锁
+    ClaimerState status() const noexcept;     // 计算属性，无锁（返回描述性状态结构）
     int max_concurrent_tasks() const noexcept;  // atomic
     int active_task_count() const noexcept;     // atomic
     
@@ -61,8 +61,7 @@ public:
      * @deprecated 状态现在根据active_task_count自动计算
      * @note 如需暂停接收任务，请使用 set_paused(true)
      */
-    [[deprecated("状态根据active_task_count自动计算，使用set_paused()替代")]]
-    Claimer &set_status(ClaimerStatus status);
+    // 旧的 set_status 已移除：请使用 set_paused()/set_offline()/set_max_concurrent() 等方法来控制状态
     
     /**
      * @brief 设置是否暂停接收新任务
@@ -210,7 +209,7 @@ public:
     xswl::signal_t<Claimer &, std::shared_ptr<Task>, const TaskResult &> sig_task_completed;
     xswl::signal_t<Claimer &, std::shared_ptr<Task>, const std::string & /* reason */> sig_task_failed;
     xswl::signal_t<Claimer &, std::shared_ptr<Task>, const std::string & /* reason */> sig_task_abandoned;
-    xswl::signal_t<Claimer &, ClaimerStatus /* old_status */, ClaimerStatus /* new_status */> sig_status_changed;
+    xswl::signal_t<Claimer &, ClaimerState /* old_state */, ClaimerState /* new_state */> sig_status_changed;
     
 private:
     class Impl;

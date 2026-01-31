@@ -715,7 +715,7 @@ conns.disconnect_all();  // 一次性断开所有连接
 | | `sig_task_completed()` | `shared_ptr<Task>, TaskResult` | 任务完成 |
 | | `sig_task_failed()` | `shared_ptr<Task>, Error` | 任务失败 |
 | | `sig_task_abandoned()` | `shared_ptr<Task>, string` | 任务放弃 |
-| | `sig_status_changed()` | `ClaimerStatus` | 申领者状态变化 |
+| | `sig_status_changed()` | `ClaimerState` | 申领者状态变化（传递 `ClaimerState`，包含 online/accepting_new_tasks/active/max_concurrent） |
 | **TaskPlatform** | `sig_task_published()` | `shared_ptr<Task>` | 任务发布到平台 |
 | | `sig_task_claimed()` | `shared_ptr<Task>` | 任务被申领 |
 | | `sig_task_started()` | `shared_ptr<Task>` | 任务开始处理 |

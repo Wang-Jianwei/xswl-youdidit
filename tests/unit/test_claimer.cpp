@@ -41,7 +41,7 @@ void test_constructor() {
     
     assert_equal(claimer.id(), "claimer-001", "ID should match");
     assert_equal(claimer.name(), "Alice", "Name should match");
-    assert_true(claimer.status() == ClaimerStatus::Idle, "Initial status should be Idle");
+    assert_true(claimer.status().is_idle(), "Initial status should be Idle");
     assert_equal(claimer.max_concurrent_tasks(), 5, "Default max concurrent should be 5");
     assert_equal(claimer.active_task_count(), 0, "Initial active count should be 0");
     assert_equal(claimer.total_claimed(), 0, "Total claimed should be 0");
@@ -71,35 +71,35 @@ void test_set_status_with_signal() {
     Claimer claimer("claimer-003", "Charlie");
     
     bool signal_emitted = false;
-    ClaimerStatus old_status_captured = ClaimerStatus::Idle;
-    ClaimerStatus new_status_captured = ClaimerStatus::Idle;
+    ClaimerState old_state_captured = claimer.status();
+    ClaimerState new_state_captured = claimer.status();
     
-    claimer.sig_status_changed.connect([&](Claimer &, ClaimerStatus old_s, ClaimerStatus new_s) {
+    claimer.sig_status_changed.connect([&](Claimer &, ClaimerState old_s, ClaimerState new_s) {
         signal_emitted = true;
-        old_status_captured = old_s;
-        new_status_captured = new_s;
+        old_state_captured = old_s;
+        new_state_captured = new_s;
     });
     
     // 测试 set_paused() - 状态从 Idle 变为 Paused
     claimer.set_paused(true);
     
     assert_true(signal_emitted, "Signal should be emitted");
-    assert_true(old_status_captured == ClaimerStatus::Idle, "Old status should be Idle");
-    assert_true(new_status_captured == ClaimerStatus::Paused, "New status should be Paused");
-    assert_true(claimer.status() == ClaimerStatus::Paused, "Status should be Paused");
+    assert_true(old_state_captured.is_idle(), "Old status should be Idle");
+    assert_true(new_state_captured.is_paused(), "New status should be Paused");
+    assert_true(claimer.status().is_paused(), "Status should be Paused");
     
     // 重置信号标志
     signal_emitted = false;
-    old_status_captured = ClaimerStatus::Idle;
-    new_status_captured = ClaimerStatus::Idle;
+    old_state_captured = claimer.status();
+    new_state_captured = claimer.status();
     
     // 测试 set_offline() - 状态从 Paused 变为 Offline
     claimer.set_offline(true);
     
     assert_true(signal_emitted, "Signal should be emitted");
-    assert_true(old_status_captured == ClaimerStatus::Paused, "Old status should be Paused");
-    assert_true(new_status_captured == ClaimerStatus::Offline, "New status should be Offline");
-    assert_true(claimer.status() == ClaimerStatus::Offline, "Status should be Offline");
+    assert_true(old_state_captured.is_paused(), "Old status should be Paused");
+    assert_true(new_state_captured.is_offline(), "New status should be Offline");
+    assert_true(claimer.status().is_offline(), "Status should be Offline");
     
     std::cout << "PASSED" << std::endl;
 }
@@ -194,7 +194,12 @@ void test_claim_single_task() {
     assert_equal(task->claimer_id(), "claimer-007", "Task claimer ID should match");
     assert_equal(claimer.active_task_count(), 1, "Active task count should be 1");
     assert_equal(claimer.total_claimed(), 1, "Total claimed should be 1");
-    
+
+    // 将申领者设置为 Paused，但由于仍有活跃任务，应仍被视为正在工作
+    claimer.set_paused(true);
+    assert_true(claimer.status().is_paused(), "Status should be Paused");
+    assert_true(claimer.status().is_working(), "Status should indicate working when there are active tasks");
+
     std::cout << "PASSED" << std::endl;
 }
 

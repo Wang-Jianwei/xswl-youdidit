@@ -12,9 +12,12 @@
 #include <mutex>
 #include <fstream>
 #include <sstream>
+#include <ctime>
+#include <cstdlib>
 #include <cmath>
 #include <algorithm>
 #include <unordered_map>
+#include <cstdio>
 
 using namespace xswl::youdidit;
 
@@ -124,6 +127,35 @@ static std::vector<std::string> parse_categories(const std::string &s) {
     return out;
 }
 
+static bool format_wall_time_manual(std::time_t t, char *buf, size_t len) {
+    std::tm tm{};
+    bool success = false;
+#if defined(_WIN32)
+    if (localtime_s(&tm, &t) == 0) {
+        success = true;
+    } else if (gmtime_s(&tm, &t) == 0) {
+        success = true;
+    }
+#else
+    std::tm local_tm{};
+    if (localtime_r(&t, &local_tm)) {
+        tm = local_tm;
+        success = true;
+    } else {
+        std::tm gmt_tm{};
+        if (gmtime_r(&t, &gmt_tm)) {
+            tm = gmt_tm;
+            success = true;
+        }
+    }
+#endif
+    if (!success) return false;
+    std::snprintf(buf, len, "%04d-%02d-%02d %02d:%02d:%02d",
+                  tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
+                  tm.tm_hour, tm.tm_min, tm.tm_sec);
+    return true;
+}
+
 static void print_usage(const char* prog) {
     std::cerr << "Error: duration ranges are required. Usage:\n";
     std::cerr << "  " << prog << " <tasks> <claimers> <duration_ranges> [html_path] [sample_interval_ms] [max_latency_samples] [max_task_details] [max_event_samples] [categories]\n";
@@ -212,6 +244,7 @@ int main(int argc, char** argv) {
     // html_path is provided by parsed Config; numeric caps are initialized below using Config
 
     auto start_time = std::chrono::steady_clock::now();
+    auto wall_start = std::chrono::system_clock::now();
     std::vector<Sample> samples;
     std::mutex samples_mutex;
 
@@ -586,6 +619,38 @@ int main(int argc, char** argv) {
               << " abandoned=" << stats.abandoned_tasks
               << " claimers=" << stats.total_claimers << "\n";
 
+    // capture wall-clock end time and platform details for report
+    auto wall_end = std::chrono::system_clock::now();
+    std::time_t wall_start_t = std::chrono::system_clock::to_time_t(wall_start);
+    std::time_t wall_end_t = std::chrono::system_clock::to_time_t(wall_end);
+    char start_buf[64] = {0}, end_buf[64] = {0};
+    if (!format_wall_time_manual(wall_start_t, start_buf, sizeof(start_buf))) {
+        std::snprintf(start_buf, sizeof(start_buf), "%lld", (long long)wall_start_t);
+    }
+    if (!format_wall_time_manual(wall_end_t, end_buf, sizeof(end_buf))) {
+        std::snprintf(end_buf, sizeof(end_buf), "%lld", (long long)wall_end_t);
+    }
+    double test_duration_sec = std::chrono::duration_cast<std::chrono::duration<double>>(wall_end - wall_start).count();
+    const char* hn_env = std::getenv("COMPUTERNAME");
+    const char* hn_env2 = std::getenv("HOSTNAME");
+    std::string host = hn_env ? hn_env : (hn_env2 ? hn_env2 : std::string("-"));
+    std::string os_name;
+#if defined(_WIN32)
+    os_name = "Windows";
+#elif defined(__linux__)
+    os_name = "Linux";
+#elif defined(__APPLE__)
+    os_name = "macOS";
+#else
+    os_name = "Unknown";
+#endif
+    unsigned int hw_threads = std::thread::hardware_concurrency();
+    int ptr_bits = sizeof(void*) * 8;
+    std::string build_type = "Debug";
+#ifdef NDEBUG
+    build_type = "Release";
+#endif
+
     if (!html_path.empty()) {
         std::ofstream ofs(html_path);
         if (ofs) {
@@ -677,6 +742,13 @@ int main(int argc, char** argv) {
             ofs << "<table>\n";
             ofs << "<tr><th>总任务数</th><th>Claimers</th><th>时长分布</th><th>Categories</th><th>采样间隔 (ms)</th><th>最大延迟样本数</th><th>最大任务详情数</th><th>最大事件样本数</th></tr>\n";
             ofs << "<tr><td>" << num_tasks << "</td><td>" << num_claimers << "</td><td>" << duration_ranges_str << "</td><td>" << (cfg.categories_str.empty()?std::string("-"):cfg.categories_str) << "</td><td>" << sample_interval_ms << "</td><td>" << max_latency_samples << "</td><td>" << max_task_details << "</td><td>" << max_event_samples << "</td></tr>\n";
+            ofs << "</table>\n";
+
+            // 增加测试平台信息（主机名、OS、硬件线程数、指针宽度、构建类型、开始/结束时间、持续时长）
+            ofs << "<h2>测试平台</h2>\n";
+            ofs << "<table>\n";
+            ofs << "<tr><th>主机名</th><th>操作系统</th><th>架构</th><th>硬件线程数</th><th>构建类型</th><th>测试开始</th><th>测试结束</th><th>持续时间 (s)</th></tr>\n";
+            ofs << "<tr><td>" << host << "</td><td>" << os_name << "</td><td>" << ptr_bits << " 位</td><td>" << hw_threads << "</td><td>" << build_type << "</td><td>" << start_buf << "</td><td>" << end_buf << "</td><td>" << std::fixed << std::setprecision(3) << test_duration_sec << "</td></tr>\n";
             ofs << "</table>\n";
 
             ofs << "<h3>关于\"平均延迟\"的说明与评估</h3>\n";
