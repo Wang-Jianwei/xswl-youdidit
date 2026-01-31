@@ -2,6 +2,9 @@
 
 本文档面向开发者，包含任务模型、API 摘要、示例与实现相关的设计说明。若你是普通使用者，请优先查看 `docs/usage.md` 与 `docs/api/API.md`。
 
+> 迁移说明：在近期重构中，核心库的 CMake 目标已由 `youdidit_core` 重命名为 `youdidit`（为兼容旧引用，`youdidit_core` 被保留为一个别名）。同时，Web 功能已从核心库中剥离到仓库根目录的 `web/` 子工程。若需要构建 Web 功能，请在配置时使用 `-DBUILD_WEB=ON`（并按需启用 `BUILD_WEB_TESTS` / `BUILD_WEB_EXAMPLES`）。
+
+
 ---
 
 ## 错误与正确的设计示例

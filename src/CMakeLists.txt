@@ -1,27 +1,13 @@
 # 核心源文件
 file(GLOB_RECURSE CORE_SOURCES core/*.cpp)
 
-# 核心库
-add_library(youdidit_core ${CORE_SOURCES})
-target_include_directories(youdidit_core PUBLIC 
+# 核心库（已重命名为 youdidit）
+add_library(youdidit ${CORE_SOURCES})
+# 保留旧名称别名以兼容现有内部引用
+add_library(youdidit_core ALIAS youdidit)
+target_include_directories(youdidit PUBLIC
     ${CMAKE_SOURCE_DIR}/include
 )
 
-# Web 模块（可选）
-option(SKIP_WEB "Skip web related modules (auto set by build script)" OFF)
-option(BUILD_WEB_MODULE "Build web monitoring module" ON)
-# 如果 SKIP_WEB=ON，则强制关闭 web 模块
-if(SKIP_WEB)
-    set(BUILD_WEB_MODULE OFF CACHE BOOL "Build web monitoring module" FORCE)
-endif()
-
-if(BUILD_WEB_MODULE)
-    file(GLOB_RECURSE WEB_SOURCES web/*.cpp)
-    if(WEB_SOURCES)
-        add_library(youdidit_web ${WEB_SOURCES})
-        target_link_libraries(youdidit_web youdidit_core Threads::Threads)
-        target_include_directories(youdidit_web PUBLIC 
-            ${CMAKE_SOURCE_DIR}/include
-        )
-    endif()
-endif()
+# 注意：Web 模块已迁移到仓库根目录的 `web/` 子工程（`web/CMakeLists.txt`）。
+# 若要在本仓库构建 Web，请在根 CMake 调用时启用 BUILD_WEB 选项。

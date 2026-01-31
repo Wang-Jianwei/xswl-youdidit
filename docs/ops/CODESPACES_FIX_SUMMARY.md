@@ -22,7 +22,7 @@ WebServer 默认绑定到 `127.0.0.1:8080`（本地主机绑定），但 GitHub 
 
 ### 修改 1: 更新默认主机绑定
 
-**文件**: `src/web/web_server.cpp` (第 8 行)
+**文件**: `web/src/web_server.cpp` (第 8 行)
 
 ```cpp
 // 修改前

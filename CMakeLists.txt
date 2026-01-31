@@ -34,6 +34,12 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 # 添加子目录
 add_subdirectory(src)
 
+# Web 子工程（可选）
+option(BUILD_WEB "Build web module" ON)
+if(BUILD_WEB)
+    add_subdirectory(web)
+endif()
+
 # 测试
 option(BUILD_TESTS "Build tests" ON)
 if(BUILD_TESTS)

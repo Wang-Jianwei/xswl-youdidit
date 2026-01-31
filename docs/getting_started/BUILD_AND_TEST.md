@@ -218,6 +218,23 @@ cmake ..
 cmake --build . -j$(nproc)
 ```
 
+### Web 子工程（可选）
+
+本项目把 Web 功能作为独立子工程放在 `web/` 下，可通过 CMake 选项控制：
+
+- `-DBUILD_WEB=ON|OFF`：是否构建 Web 子工程（默认：ON）
+- `-DBUILD_WEB_EXAMPLES=ON|OFF`：是否构建 `web/examples/`（Windows 上默认 OFF）
+- `-DBUILD_WEB_TESTS=ON|OFF`：是否构建 `web/tests/`（Windows 上默认 OFF）
+
+示例：在构建时启用 Web 与其示例/测试：
+
+```bash
+cmake .. -DBUILD_WEB=ON -DBUILD_WEB_EXAMPLES=ON -DBUILD_WEB_TESTS=ON
+cmake --build . -j$(nproc)
+```
+
+> ⚠️ 注意（Windows）：由于部分第三方库（例如内嵌的 cpp-httplib）对 Windows SDK 有特定要求，默认在 Windows 工具链上关闭 `BUILD_WEB_EXAMPLES` 和 `BUILD_WEB_TESTS`，以避免阻塞主构建。若你需要在 Windows 上开启测试/示例，请确保所用工具链和 Windows SDK 支持 Winsock 与相关 API（或手动链接 `ws2_32` / `iphlpapi`）。
+
 ### 手动运行测试
 
 ```bash
@@ -228,16 +245,20 @@ cmake --build . -j$(nproc)
 ./tests/easy-test_claimer
 ./tests/easy-test_task_platform
 ./tests/easy-test_thread_safety
-./tests/easy-test_web
+
+# Web 单元测试（若已启用）
+# ./web/tests/easy-test_web
 
 # 集成测试
 ./tests/easy-integration_test_workflow
-./tests/easy-integration_test_web_api
+# Web 集成测试（若已启用）
+# ./web/tests/easy-integration_test_web_api
 
 # 示例程序
 ./examples/easy-example_basic_usage
 ./examples/easy-example_multi_claimer
-./examples/easy-example_web_monitoring
+# Web 示例（若已启用）
+# ./web/examples/easy-example_web_demo
 
 # 使用 CTest
 ctest --output-on-failure

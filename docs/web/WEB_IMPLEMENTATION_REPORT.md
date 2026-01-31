@@ -19,7 +19,7 @@
 | 组件 | 文件 | 行数 | 状态 |
 |------|------|------|------|
 | HTTP 库 | `third_party/httplib.h` | 207 | ✅ 完成 |
-| WebServer 类 | `src/web/web_server.cpp` | 496 | ✅ 完成 |
+| WebServer 类 | `web/src/web_server.cpp` | 496 | ✅ 完成 |
 | WebServer 头文件 | `include/xswl/youdidit/web/web_server.hpp` | 35 | ✅ 完成 |
 
 ### ✅ 测试覆盖
@@ -126,7 +126,7 @@ Socket API (系统级)
 
 **修改文件:**
 - `include/xswl/youdidit/web/web_server.hpp` - 更新为实现
-- `src/web/web_server.cpp` - 完整 HTTP 实现 (496 行)
+- `web/src/web_server.cpp` - 完整 HTTP 实现 (496 行)
 - `CMakeLists.txt` - 添加包含路径
 - `API.md` - 添加 Web 服务器文档
 
@@ -246,8 +246,8 @@ $ curl http://localhost:8080/api/tasks
 - ✅ Phase 5: Web 服务器实现
 
 **交付物:**
-- ✅ 核心库 (libxswl_youdidit_core.a)
-- ✅ Web 库 (libxswl_youdidit_web.a)
+- ✅ 核心库 (libyoudidit.a; CMake target `youdidit`. Note: `youdidit_core` preserved as an alias for compatibility)
+- ✅ Web 库 (libyoudidit_web.a)
 - ✅ 完整的 API 文档
 - ✅ 演示程序
 - ✅ 测试套件

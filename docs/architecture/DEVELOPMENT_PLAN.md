@@ -842,7 +842,7 @@ tl::expected<std::shared_ptr<Task>, Error> TaskPlatform::Impl::_try_claim_task(
 
 **输出文件**：
 - `include/xswl/youdidit/web/event_log.hpp`
-- `src/web/event_log.cpp`
+- `web/src/event_log.cpp`
 
 **实现要点**：
 
@@ -905,7 +905,7 @@ private:
 
 **输出文件**：
 - `include/xswl/youdidit/web/time_replay.hpp`
-- `src/web/time_replay.cpp`
+- `web/src/time_replay.cpp`
 
 **实现要点**：
 
@@ -964,7 +964,7 @@ private:
 
 **输出文件**：
 - `include/xswl/youdidit/web/metrics_exporter.hpp`
-- `src/web/metrics_exporter.cpp`
+- `web/src/metrics_exporter.cpp`
 
 **实现要点**：
 
@@ -1023,7 +1023,7 @@ private:
 
 **输出文件**：
 - `include/xswl/youdidit/web/web_dashboard.hpp`
-- `src/web/web_dashboard.cpp`
+- `web/src/web_dashboard.cpp`
 
 **实现要点**：
 
@@ -1101,7 +1101,7 @@ private:
 
 **输出文件**：
 - `include/xswl/youdidit/web/web_server.hpp`
-- `src/web/web_server.cpp`
+- `web/src/web_server.cpp`
 
 **实现方案选择**：
 

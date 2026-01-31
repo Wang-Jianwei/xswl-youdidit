@@ -163,27 +163,33 @@ python3 analyze_tests.py [构建目录]
 mkdir build
 cd build
 
-# 配置 CMake
-cmake ..
+# 配置 CMake（启用 Web 子工程）
+cmake .. -DBUILD_WEB=ON
+
+# 如果需要构建 Web 的示例或测试（在 Windows 下默认关闭）
+# cmake .. -DBUILD_WEB=ON -DBUILD_WEB_EXAMPLES=ON -DBUILD_WEB_TESTS=ON
 
 # 编译（使用多核加速）
 make -j$(nproc)
 
-# 运行单元测试
+# 运行单元测试（注意：在某些 Windows 工具链下，Web 测试/示例可能默认未构建）
 ./tests/easy-test_types
 ./tests/easy-test_task
 ./tests/easy-test_claimer
 ./tests/easy-test_task_platform
-./tests/easy-test_web
+# 如果已启用 Web 子工程并构建测试：
+# ./tests/easy-test_web
 
 # 运行集成测试
 ./tests/easy-integration_test_workflow
-./tests/easy-integration_test_web_api
+# 如果启用了 Web 集成测试：
+# ./tests/easy-integration_test_web_api
 
 # 运行示例
 ./examples/easy-example_basic_usage
 ./examples/easy-example_multi_claimer
-./examples/easy-example_web_monitoring
+# Web 示例位于 web/examples/，需启用 BUILD_WEB_EXAMPLES
+# ./web/examples/easy-example_web_demo
 
 # 或使用 CTest 运行所有测试
 ctest --output-on-failure

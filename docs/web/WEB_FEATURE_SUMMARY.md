@@ -171,7 +171,7 @@ xswl-youdidit/
 │   └── httplib.h                    # 自定义 HTTP 库
 ├── include/xswl/youdidit/web/
 │   └── web_server.hpp               # WebServer 头文件
-├── src/web/
+├── web/src/
 │   └── web_server.cpp               # WebServer 实现 (496 行)
 ├── examples/
 │   └── web_demo.cpp                 # 演示程序

@@ -43,7 +43,7 @@
 
 **文件**: 
 - Header: `/workspaces/xswl-youdidit/include/xswl/youdidit/web/web_server.hpp`
-- Implementation: `/workspaces/xswl-youdidit/src/web/web_server.cpp` (496 行)
+- Implementation: `/workspaces/xswl-youdidit/web/src/web_server.cpp` (496 行)
 
 ### 3. 实时 HTML 仪表板
 
@@ -257,7 +257,7 @@ curl http://localhost:8080/api/logs
 
 **修改文件:**
 - `include/xswl/youdidit/web/web_server.hpp` - 添加真实 HTTP 支持
-- `src/web/web_server.cpp` - 完整 HTTP 实现 (496 行)
+- `web/src/web_server.cpp` - 完整 HTTP 实现 (496 行)
 - `CMakeLists.txt` - 添加 httplib.h 包含路径
 - `API.md` - 添加 Web 服务器 API 文档
 

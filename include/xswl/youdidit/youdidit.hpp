@@ -17,12 +17,13 @@
 #include <xswl/youdidit/core/claimer.hpp>
 #include <xswl/youdidit/core/task_platform.hpp>
 
-// Web 监控模块
-#include <xswl/youdidit/web/web_dashboard.hpp>
-#include <xswl/youdidit/web/metrics_exporter.hpp>
-#include <xswl/youdidit/web/event_log.hpp>
-#include <xswl/youdidit/web/time_replay.hpp>
-#include <xswl/youdidit/web/web_server.hpp>
+// Web 监控模块（已迁移）
+// Web 模块已移至仓库根目录的 `web/` 子工程。若要使用 Web 功能，请在构建时启用该子工程并单独包含对应头文件，例如：
+// #include <xswl/youdidit/web/web_dashboard.hpp>
+// #include <xswl/youdidit/web/metrics_exporter.hpp>
+// #include <xswl/youdidit/web/event_log.hpp>
+// #include <xswl/youdidit/web/time_replay.hpp>
+// #include <xswl/youdidit/web/web_server.hpp>
 
 /**
  * @namespace xswl
