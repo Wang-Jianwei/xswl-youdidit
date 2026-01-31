@@ -131,8 +131,16 @@ fi
 
 # 配置 CMake
 print_step "配置 CMake..."
-if cmake "$PROJECT_ROOT"; then
+# 在单配置生成器上启用 compile_commands 导出，方便编辑器使用
+if cmake "$PROJECT_ROOT" -DCMAKE_EXPORT_COMPILE_COMMANDS=ON; then
     print_success "CMake 配置成功"
+    # 如果生成了 compile_commands.json，则拷贝到项目根以便编辑器（clangd / C/C++ 插件）识别
+    if [ -f "$BUILD_DIR/compile_commands.json" ]; then
+        cp "$BUILD_DIR/compile_commands.json" "$PROJECT_ROOT/compile_commands.json"
+        print_success "已导出 compile_commands.json 到项目根（供编辑器使用）"
+    else
+        print_warning "未检测到 compile_commands.json；若需编辑器跳转请确保 CMake 配置成功且支持导出。"
+    fi
 else
     print_error "CMake 配置失败"
     exit 1

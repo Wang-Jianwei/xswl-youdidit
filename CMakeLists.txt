@@ -25,7 +25,7 @@ find_package(Threads REQUIRED)
 # 可配置的可执行文件前缀（将写入构建目录的 easy_executable_prefix.txt，供脚本读取）
 set(EASY_EXECUTABLE_PREFIX "easy-" CACHE STRING "Prefix added to executable output names (set empty to disable)")
 # 将前缀写入到构建目录（每次 configure 时更新），脚本会读取此文件来找到正确的可执行文件名
-file(WRITE "${CMAKE_BINARY_DIR}/easy_executable_prefix.txt" "${EASY_EXECUTABLE_PREFIX}")
+file(WRITE "${CMAKE_BINARY_DIR}/executable_prefix.txt" "${EASY_EXECUTABLE_PREFIX}")
 
 
 # 项目头文件
