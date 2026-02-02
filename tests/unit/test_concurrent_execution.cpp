@@ -47,7 +47,7 @@ int main() {
     std::atomic<int> concurrent_error_count{0};
     
     // 创建多个线程同时执行同一任务
-    const int thread_count = 5;
+    const int thread_count = 8;
     std::vector<std::thread> threads;
     
     for (int i = 0; i < thread_count; ++i) {
@@ -76,6 +76,7 @@ int main() {
     
     // 验证结果
     std::cout << "\n=== Test Results ===" << std::endl;
+    std::cout << "Threads count: " << thread_count << std::endl;
     std::cout << "Success count: " << success_count.load() << std::endl;
     std::cout << "Error count: " << error_count.load() << std::endl;
     std::cout << "Concurrent error count: " << concurrent_error_count.load() << std::endl;
@@ -85,10 +86,10 @@ int main() {
                        (concurrent_error_count.load() == thread_count - 1);
     
     if (test_passed) {
-        std::cout << "\n✓ Test PASSED: Concurrent execution protection works correctly" << std::endl;
+        std::cout << "\nTest PASSED: Concurrent execution protection works correctly" << std::endl;
         return 0;
     } else {
-        std::cerr << "\n✗ Test FAILED: Expected 1 success and " << (thread_count - 1) 
+        std::cerr << "\nTest FAILED: Expected 1 success and " << (thread_count - 1) 
                   << " concurrent errors" << std::endl;
         return 1;
     }

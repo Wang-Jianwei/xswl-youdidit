@@ -71,6 +71,46 @@
 },
 {
   "directory": "D:/workdir/open_source/xswl-youdidit/build/tests",
+  "command": "D:\\Qt\\Qt5.14.2\\Tools\\mingw730_64\\bin\\c++.exe  @CMakeFiles/test_force_delete_cleanup.dir/includes_CXX.rsp -O3 -DNDEBUG -Wall -Wextra -Wpedantic -std=c++11 -o CMakeFiles\\test_force_delete_cleanup.dir\\unit\\test_force_delete_cleanup.cpp.obj -c D:\\workdir\\open_source\\xswl-youdidit\\tests\\unit\\test_force_delete_cleanup.cpp",
+  "file": "D:/workdir/open_source/xswl-youdidit/tests/unit/test_force_delete_cleanup.cpp"
+},
+{
+  "directory": "D:/workdir/open_source/xswl-youdidit/build/tests",
+  "command": "D:\\Qt\\Qt5.14.2\\Tools\\mingw730_64\\bin\\c++.exe  @CMakeFiles/test_signal_once.dir/includes_CXX.rsp -O3 -DNDEBUG -Wall -Wextra -Wpedantic -std=c++11 -o CMakeFiles\\test_signal_once.dir\\unit\\test_signal_once.cpp.obj -c D:\\workdir\\open_source\\xswl-youdidit\\tests\\unit\\test_signal_once.cpp",
+  "file": "D:/workdir/open_source/xswl-youdidit/tests/unit/test_signal_once.cpp"
+},
+{
+  "directory": "D:/workdir/open_source/xswl-youdidit/build/tests",
+  "command": "D:\\Qt\\Qt5.14.2\\Tools\\mingw730_64\\bin\\c++.exe  @CMakeFiles/test_stress_concurrent_claims.dir/includes_CXX.rsp -O3 -DNDEBUG -Wall -Wextra -Wpedantic -std=c++11 -o CMakeFiles\\test_stress_concurrent_claims.dir\\unit\\test_stress_concurrent_claims.cpp.obj -c D:\\workdir\\open_source\\xswl-youdidit\\tests\\unit\\test_stress_concurrent_claims.cpp",
+  "file": "D:/workdir/open_source/xswl-youdidit/tests/unit/test_stress_concurrent_claims.cpp"
+},
+{
+  "directory": "D:/workdir/open_source/xswl-youdidit/build/tests",
+  "command": "D:\\Qt\\Qt5.14.2\\Tools\\mingw730_64\\bin\\c++.exe  @CMakeFiles/test_concurrent_metadata.dir/includes_CXX.rsp -O3 -DNDEBUG -Wall -Wextra -Wpedantic -std=c++11 -o CMakeFiles\\test_concurrent_metadata.dir\\unit\\test_concurrent_metadata.cpp.obj -c D:\\workdir\\open_source\\xswl-youdidit\\tests\\unit\\test_concurrent_metadata.cpp",
+  "file": "D:/workdir/open_source/xswl-youdidit/tests/unit/test_concurrent_metadata.cpp"
+},
+{
+  "directory": "D:/workdir/open_source/xswl-youdidit/build/tests",
+  "command": "D:\\Qt\\Qt5.14.2\\Tools\\mingw730_64\\bin\\c++.exe  @CMakeFiles/test_claim_race.dir/includes_CXX.rsp -O3 -DNDEBUG -Wall -Wextra -Wpedantic -std=c++11 -o CMakeFiles\\test_claim_race.dir\\unit\\test_claim_race.cpp.obj -c D:\\workdir\\open_source\\xswl-youdidit\\tests\\unit\\test_claim_race.cpp",
+  "file": "D:/workdir/open_source/xswl-youdidit/tests/unit/test_claim_race.cpp"
+},
+{
+  "directory": "D:/workdir/open_source/xswl-youdidit/build/tests",
+  "command": "D:\\Qt\\Qt5.14.2\\Tools\\mingw730_64\\bin\\c++.exe  @CMakeFiles/test_finalize_race.dir/includes_CXX.rsp -O3 -DNDEBUG -Wall -Wextra -Wpedantic -std=c++11 -o CMakeFiles\\test_finalize_race.dir\\unit\\test_finalize_race.cpp.obj -c D:\\workdir\\open_source\\xswl-youdidit\\tests\\unit\\test_finalize_race.cpp",
+  "file": "D:/workdir/open_source/xswl-youdidit/tests/unit/test_finalize_race.cpp"
+},
+{
+  "directory": "D:/workdir/open_source/xswl-youdidit/build/tests",
+  "command": "D:\\Qt\\Qt5.14.2\\Tools\\mingw730_64\\bin\\c++.exe  @CMakeFiles/test_resource_leak.dir/includes_CXX.rsp -O3 -DNDEBUG -Wall -Wextra -Wpedantic -std=c++11 -o CMakeFiles\\test_resource_leak.dir\\unit\\test_resource_leak.cpp.obj -c D:\\workdir\\open_source\\xswl-youdidit\\tests\\unit\\test_resource_leak.cpp",
+  "file": "D:/workdir/open_source/xswl-youdidit/tests/unit/test_resource_leak.cpp"
+},
+{
+  "directory": "D:/workdir/open_source/xswl-youdidit/build/tests",
+  "command": "D:\\Qt\\Qt5.14.2\\Tools\\mingw730_64\\bin\\c++.exe  @CMakeFiles/test_edge_cases.dir/includes_CXX.rsp -O3 -DNDEBUG -Wall -Wextra -Wpedantic -std=c++11 -o CMakeFiles\\test_edge_cases.dir\\unit\\test_edge_cases.cpp.obj -c D:\\workdir\\open_source\\xswl-youdidit\\tests\\unit\\test_edge_cases.cpp",
+  "file": "D:/workdir/open_source/xswl-youdidit/tests/unit/test_edge_cases.cpp"
+},
+{
+  "directory": "D:/workdir/open_source/xswl-youdidit/build/tests",
   "command": "D:\\Qt\\Qt5.14.2\\Tools\\mingw730_64\\bin\\c++.exe  @CMakeFiles/integration_test_workflow.dir/includes_CXX.rsp -O3 -DNDEBUG -Wall -Wextra -Wpedantic -std=c++11 -o CMakeFiles\\integration_test_workflow.dir\\integration\\test_workflow.cpp.obj -c D:\\workdir\\open_source\\xswl-youdidit\\tests\\integration\\test_workflow.cpp",
   "file": "D:/workdir/open_source/xswl-youdidit/tests/integration/test_workflow.cpp"
 },

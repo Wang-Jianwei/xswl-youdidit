@@ -48,6 +48,46 @@ add_executable(test_finalize_idempotent unit/test_finalize_idempotent.cpp)
 set_target_properties(test_finalize_idempotent PROPERTIES OUTPUT_NAME "${EASY_EXECUTABLE_PREFIX}test_finalize_idempotent")
 target_link_libraries(test_finalize_idempotent youdidit Threads::Threads)
 
+# test_force_delete_cleanup
+add_executable(test_force_delete_cleanup unit/test_force_delete_cleanup.cpp)
+set_target_properties(test_force_delete_cleanup PROPERTIES OUTPUT_NAME "${EASY_EXECUTABLE_PREFIX}test_force_delete_cleanup")
+target_link_libraries(test_force_delete_cleanup youdidit Threads::Threads)
+
+# test_signal_once
+add_executable(test_signal_once unit/test_signal_once.cpp)
+set_target_properties(test_signal_once PROPERTIES OUTPUT_NAME "${EASY_EXECUTABLE_PREFIX}test_signal_once")
+target_link_libraries(test_signal_once youdidit Threads::Threads)
+
+# test_stress_concurrent_claims
+add_executable(test_stress_concurrent_claims unit/test_stress_concurrent_claims.cpp)
+set_target_properties(test_stress_concurrent_claims PROPERTIES OUTPUT_NAME "${EASY_EXECUTABLE_PREFIX}test_stress_concurrent_claims")
+target_link_libraries(test_stress_concurrent_claims youdidit Threads::Threads)
+
+# test_concurrent_metadata
+add_executable(test_concurrent_metadata unit/test_concurrent_metadata.cpp)
+set_target_properties(test_concurrent_metadata PROPERTIES OUTPUT_NAME "${EASY_EXECUTABLE_PREFIX}test_concurrent_metadata")
+target_link_libraries(test_concurrent_metadata youdidit Threads::Threads)
+
+# test_claim_race
+add_executable(test_claim_race unit/test_claim_race.cpp)
+set_target_properties(test_claim_race PROPERTIES OUTPUT_NAME "${EASY_EXECUTABLE_PREFIX}test_claim_race")
+target_link_libraries(test_claim_race youdidit Threads::Threads)
+
+# test_finalize_race
+add_executable(test_finalize_race unit/test_finalize_race.cpp)
+set_target_properties(test_finalize_race PROPERTIES OUTPUT_NAME "${EASY_EXECUTABLE_PREFIX}test_finalize_race")
+target_link_libraries(test_finalize_race youdidit Threads::Threads)
+
+# test_resource_leak
+add_executable(test_resource_leak unit/test_resource_leak.cpp)
+set_target_properties(test_resource_leak PROPERTIES OUTPUT_NAME "${EASY_EXECUTABLE_PREFIX}test_resource_leak")
+target_link_libraries(test_resource_leak youdidit Threads::Threads)
+
+# test_edge_cases
+add_executable(test_edge_cases unit/test_edge_cases.cpp)
+set_target_properties(test_edge_cases PROPERTIES OUTPUT_NAME "${EASY_EXECUTABLE_PREFIX}test_edge_cases")
+target_link_libraries(test_edge_cases youdidit Threads::Threads)
+
 # Web tests 已迁移到 `web/tests/` 子工程
 
 # 集成测试

@@ -384,21 +384,29 @@ tl::expected<void, Error> Claimer::complete_task(const TaskId &task_id, const Ta
     if (!task_opt.has_value()) {
         return tl::make_unexpected(Error("Task not found", ErrorCode::TASK_NOT_FOUND));
     }
-    
+
     auto task = task_opt.value();
     TaskStatus old_status = task->status();
-    
-    // 如果任务是 Claimed 状态,先转换到 Processing（以满足状态机）
+
+    // 如果任务仍为 Claimed，尝试启动（Start 方法使用 CAS）
     if (old_status == TaskStatus::Claimed) {
-        task->set_status(TaskStatus::Processing);
+        (void)task->start(); // best-effort: 若失败说明其他线程已处理
     }
-    
-    // 设置任务为已完成（Task 内部会触发 Task::sig_completed）
-    task->set_status(TaskStatus::Completed);
-    task->set_progress(100);
-    task->set_completed_at(std::chrono::system_clock::now());
-    
-    // 尝试从已申领任务列表中移除已完成的任务，并减少活跃任务计数
+
+    // 尝试通过 Task::complete 原子完成任务（或检测是否已被其他线程完成）
+    bool completed = false;
+    TaskStatus cur_status = task->status();
+    if (cur_status == TaskStatus::Processing) {
+        auto cret = task->complete(result);
+        if (cret.has_value()) {
+            completed = true;
+        }
+    } else if (cur_status == TaskStatus::Completed) {
+        // 已经由其他路径完成
+        completed = true;
+    }
+
+    // 从已申领任务列表中移除已完成的任务，并减少活跃任务计数（幂等）
     bool removed = false;
     {
         std::lock_guard<std::mutex> lock(d->data_mutex_);
@@ -409,13 +417,13 @@ tl::expected<void, Error> Claimer::complete_task(const TaskId &task_id, const Ta
             removed = true;
         }
     }
-    
+
     // 只有第一个成功移除任务的调用者负责触发 Claimer 层信号与统计更新
-    if (removed) {
+    if (removed && completed) {
         emit sig_task_completed(*this, task, result);
         _update_statistics(old_status, TaskStatus::Completed);
     }
-    
+
     return {};
 }
 
@@ -424,14 +432,14 @@ tl::expected<void, Error> Claimer::abandon_task(const TaskId &task_id, const std
     if (!task_opt.has_value()) {
         return tl::make_unexpected(Error("Task not found", ErrorCode::TASK_NOT_FOUND));
     }
-    
+
     auto task = task_opt.value();
     TaskStatus old_status = task->status();
-    
-    // 设置任务为已放弃（Task 层会发出失败/放弃信号）
-    task->set_status(TaskStatus::Abandoned);
-    
-    // 尝试从已申领任务列表中移除，并减少活跃任务计数
+
+    // 使用 Task::abandon 确保状态转换原子性并触发 Task 层信号
+    (void)task->abandon(reason); // best-effort: 若失败说明其他线程已处理
+
+    // 尝试从已申领任务列表中移除，并减少活跃任务计数（幂等）
     bool removed = false;
     {
         std::lock_guard<std::mutex> lock(d->data_mutex_);
@@ -442,13 +450,13 @@ tl::expected<void, Error> Claimer::abandon_task(const TaskId &task_id, const std
             removed = true;
         }
     }
-    
+
     // 只有第一个成功移除任务的调用者负责触发 Claimer 层信号与统计更新
     if (removed) {
         emit sig_task_abandoned(*this, task, reason);
         _update_statistics(old_status, TaskStatus::Abandoned);
     }
-    
+
     return {};
 }
 

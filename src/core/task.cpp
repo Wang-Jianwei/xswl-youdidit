@@ -633,11 +633,16 @@ tl::expected<void, Error> Task::abandon(const std::string &reason) {
                                          ErrorCode::TASK_STATUS_INVALID));
     }
     
-    // 使用 CAS 操作
-    TaskStatus old_status = current;
-    d->status_.store(TaskStatus::Abandoned, std::memory_order_release);
+    // 使用 CAS 操作确保只有一个调用者能将任务转为 Abandoned
+    TaskStatus expected = current;
+    if (!d->status_.compare_exchange_strong(expected, TaskStatus::Abandoned,
+                                            std::memory_order_acq_rel,
+                                            std::memory_order_acquire)) {
+        return tl::make_unexpected(Error("Failed to abandon task",
+                                         ErrorCode::TASK_STATUS_INVALID));
+    }
     
-    _trigger_status_signal(old_status, TaskStatus::Abandoned);
+    _trigger_status_signal(current, TaskStatus::Abandoned);
     return {};
 }
 
@@ -647,18 +652,24 @@ tl::expected<void, Error> Task::republish() {
         return tl::make_unexpected(Error("Task must be in Failed or Abandoned state to republish",
                                          ErrorCode::TASK_STATUS_INVALID));
     }
-    
+
+    // 使用 CAS 操作确保原子性
+    TaskStatus expected = current;
+    if (!d->status_.compare_exchange_strong(expected, TaskStatus::Published,
+                                            std::memory_order_acq_rel,
+                                            std::memory_order_acquire)) {
+        return tl::make_unexpected(Error("Failed to republish task",
+                                         ErrorCode::TASK_STATUS_INVALID));
+    }
+
     // 清除申领者信息
     {
         std::lock_guard<std::mutex> lock(d->data_mutex_);
         d->claimer_id_.clear();
     }
-    
-    TaskStatus old_status = current;
-    d->status_.store(TaskStatus::Published, std::memory_order_release);
+
     set_published_at(std::chrono::system_clock::now());
-    
-    _trigger_status_signal(old_status, TaskStatus::Published);
+    _trigger_status_signal(current, TaskStatus::Published);
     return {};
 }
 

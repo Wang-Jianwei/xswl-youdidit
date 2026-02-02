@@ -151,20 +151,39 @@ bool TaskPlatform::has_task(const TaskId &task_id) const {
 
 bool TaskPlatform::_delete_task_internal(const TaskId &task_id, bool force) {
     std::shared_ptr<Task> task;
+    std::string claimer_id;
+    bool had_claimer = false;
     {
         std::lock_guard<std::mutex> lock(d->tasks_mutex_);
         auto it = d->tasks_.find(task_id);
         if (it == d->tasks_.end()) return false;
         task = it->second;
-        if (!force && !task->claimer_id().empty()) {
+        claimer_id = task->claimer_id();
+        had_claimer = !claimer_id.empty();
+        if (!force && had_claimer) {
             // 不允许删除仍被申领的任务
             return false;
         }
         d->tasks_.erase(it);
     }
 
-    // 更新统计/清理 Claimer 的 claimed list 如果需要
-    // 注意：此处我们仅触发删除信号，Claimer 层的已申领列表在正常流程中由 complete/abandon 管理
+    // 如果是强制删除且任务之前被某个 Claimer 申领，尝试通知 Claimer 进行清理
+    if (force && had_claimer) {
+        std::shared_ptr<Claimer> claimer;
+        {
+            std::lock_guard<std::mutex> lock(d->claimers_mutex_);
+            auto itc = d->claimers_.find(claimer_id);
+            if (itc != d->claimers_.end()) {
+                claimer = itc->second;
+            }
+        }
+        if (claimer) {
+            // Best-effort: 忽略返回值（可能已经被其他流程处理）
+            claimer->abandon_task(task_id, "Deleted by platform (force)");
+        }
+    }
+
+    // 在释放平台锁后触发删除信号
     emit sig_task_deleted(task);
     return true;
 }
