@@ -38,6 +38,11 @@ add_executable(test_thread_safety unit/test_thread_safety.cpp)
 set_target_properties(test_thread_safety PROPERTIES OUTPUT_NAME "${EASY_EXECUTABLE_PREFIX}test_thread_safety")
 target_link_libraries(test_thread_safety youdidit Threads::Threads)
 
+# test_concurrent_execution
+add_executable(test_concurrent_execution unit/test_concurrent_execution.cpp)
+set_target_properties(test_concurrent_execution PROPERTIES OUTPUT_NAME "${EASY_EXECUTABLE_PREFIX}test_concurrent_execution")
+target_link_libraries(test_concurrent_execution youdidit Threads::Threads)
+
 # Web tests 已迁移到 `web/tests/` 子工程
 
 # 集成测试

@@ -9,6 +9,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <cstdint>
 
 namespace xswl {
 namespace youdidit {
@@ -54,8 +55,8 @@ public:
         std::string name;
         ClaimerState status;
         int active_task_count;
-        int total_completed;
-        int total_failed;
+        std::uint64_t total_completed;
+        std::uint64_t total_failed;
     };
 
     std::vector<TaskSummary> get_tasks_summary() const;

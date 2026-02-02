@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <mutex>
 #include <atomic>
+#include <cstdint>
 
 namespace xswl {
 namespace youdidit {
@@ -33,11 +34,14 @@ public:
     // 已申领的任务
     std::map<TaskId, std::shared_ptr<Task>> claimed_tasks_;
     
+    // 正在执行的任务（用于防止并发执行同一任务）
+    std::set<TaskId> executing_tasks_;
+    
     // 统计信息
-    std::atomic<int> total_claimed_;
-    std::atomic<int> total_completed_;
-    std::atomic<int> total_failed_;
-    std::atomic<int> total_abandoned_;
+    std::atomic<std::uint64_t> total_claimed_;
+    std::atomic<std::uint64_t> total_completed_;
+    std::atomic<std::uint64_t> total_failed_;
+    std::atomic<std::uint64_t> total_abandoned_;
     
     // 平台关联
     TaskPlatform* platform_;
@@ -52,10 +56,10 @@ public:
           offline_(false),
           max_concurrent_tasks_(5),
           active_task_count_(0),
-          total_claimed_(0),
-          total_completed_(0),
-          total_failed_(0),
-          total_abandoned_(0),
+          total_claimed_(0u),
+          total_completed_(0u),
+          total_failed_(0u),
+          total_abandoned_(0u),
           platform_(nullptr) {}
     
     // 计算当前状态（返回描述性结构）
@@ -134,19 +138,19 @@ std::vector<std::shared_ptr<Task>> Claimer::active_tasks() const {
     return tasks;
 }
 
-int Claimer::total_claimed() const noexcept {
+std::uint64_t Claimer::total_claimed() const noexcept {
     return d->total_claimed_.load(std::memory_order_acquire);
 }
 
-int Claimer::total_completed() const noexcept {
+std::uint64_t Claimer::total_completed() const noexcept {
     return d->total_completed_.load(std::memory_order_acquire);
 }
 
-int Claimer::total_failed() const noexcept {
+std::uint64_t Claimer::total_failed() const noexcept {
     return d->total_failed_.load(std::memory_order_acquire);
 }
 
-int Claimer::total_abandoned() const noexcept {
+std::uint64_t Claimer::total_abandoned() const noexcept {
     return d->total_abandoned_.load(std::memory_order_acquire);
 }
 
@@ -260,7 +264,7 @@ tl::expected<void, Error> Claimer::claim_task(std::shared_ptr<Task> task) {
         std::lock_guard<std::mutex> lock(d->data_mutex_);
         d->claimed_tasks_[task->id()] = task;
         d->active_task_count_.fetch_add(1, std::memory_order_acq_rel);
-        d->total_claimed_.fetch_add(1, std::memory_order_acq_rel);
+        d->total_claimed_.fetch_add(1u, std::memory_order_acq_rel);
     }
     
     // 触发信号
@@ -332,6 +336,31 @@ TaskResult Claimer::run_task(std::shared_ptr<Task> task, const std::string &inpu
                                          ErrorCode::TASK_STATUS_INVALID);
     }
     
+    TaskId task_id = task->id();
+    
+    // ========== 并发保护：确保同一任务不会被多个线程同时执行 ==========
+    {
+        std::lock_guard<std::mutex> lock(d->data_mutex_);
+        // 检查任务是否已经在执行中
+        if (d->executing_tasks_.find(task_id) != d->executing_tasks_.end()) {
+            return Error("Task is already being executed by another thread", 
+                        ErrorCode::TASK_STATUS_INVALID);
+        }
+        // 标记任务为执行中
+        d->executing_tasks_.insert(task_id);
+    }
+    
+    // RAII 守卫：确保函数退出时自动清理执行标记
+    struct ExecutionGuard {
+        Claimer::Impl* impl;
+        TaskId task_id;
+        ~ExecutionGuard() {
+            std::lock_guard<std::mutex> lock(impl->data_mutex_);
+            impl->executing_tasks_.erase(task_id);
+        }
+    };
+    ExecutionGuard guard{d.get(), task_id};
+    
     // 触发开始信号
     emit sig_task_started(*this, task);
     
@@ -340,12 +369,12 @@ TaskResult Claimer::run_task(std::shared_ptr<Task> task, const std::string &inpu
 
     if (result.ok()) {
         // 成功完成 - 自动调用 complete_task 记账
-        complete_task(task->id(), result);
+        complete_task(task_id, result);
         return result;
     } else {
         // 执行失败 - 自动调用 abandon_task 记账
         Error error = result.error;
-        abandon_task(task->id(), error.message);
+        abandon_task(task_id, error.message);
         return error;
     }
 }
@@ -552,11 +581,11 @@ void Claimer::_update_statistics(TaskStatus /*old_status*/, TaskStatus new_statu
     // 注意：active_task_count 在 complete_task 和 abandon_task 中已经处理
     // 这里只更新完成/失败计数
     if (new_status == TaskStatus::Completed) {
-        d->total_completed_.fetch_add(1, std::memory_order_acq_rel);
+        d->total_completed_.fetch_add(1u, std::memory_order_acq_rel);
     } else if (new_status == TaskStatus::Failed) {
-        d->total_failed_.fetch_add(1, std::memory_order_acq_rel);
+        d->total_failed_.fetch_add(1u, std::memory_order_acq_rel);
     } else if (new_status == TaskStatus::Abandoned) {
-        d->total_abandoned_.fetch_add(1, std::memory_order_acq_rel);
+        d->total_abandoned_.fetch_add(1u, std::memory_order_acq_rel);
     }
 }
 

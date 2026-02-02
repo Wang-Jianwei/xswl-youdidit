@@ -8,6 +8,7 @@
 #include <vector>
 #include <set>
 #include <map>
+#include <cstdint>
 
 namespace xswl {
 namespace youdidit {
@@ -48,10 +49,10 @@ public:
     std::vector<std::shared_ptr<Task>> active_tasks() const;
     
     // 统计信息
-    int total_claimed() const noexcept;
-    int total_completed() const noexcept;
-    int total_failed() const noexcept;
-    int total_abandoned() const noexcept;
+    std::uint64_t total_claimed() const noexcept;
+    std::uint64_t total_completed() const noexcept;
+    std::uint64_t total_failed() const noexcept;
+    std::uint64_t total_abandoned() const noexcept;
     
     // ========== 基本属性 Setter (Fluent API) ==========
     Claimer &set_name(const std::string &name);

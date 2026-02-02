@@ -392,10 +392,9 @@ TaskResult Task::execute(const std::string &input) {
         return task_result;
     } else {
         // 失败
-        Error err = result.error;
         set_status(TaskStatus::Failed);
-        emit sig_failed(*this, err);
-        return err;
+        emit sig_failed(*this, result.error);
+        return result.error;
     }
 }
 

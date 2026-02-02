@@ -4,6 +4,7 @@
 #include <cassert>
 #include <iostream>
 #include <memory>
+#include <type_traits>
 
 using namespace xswl::youdidit;
 
@@ -15,10 +16,14 @@ void assert_true(bool condition, const char* message) {
     }
 }
 
-void assert_equal(int a, int b, const char* message) {
-    if (a != b) {
+template<typename A, typename B>
+void assert_equal(A a, B b, const char* message) {
+    using CT = typename std::common_type<A,B>::type;
+    CT av = static_cast<CT>(a);
+    CT bv = static_cast<CT>(b);
+    if (av != bv) {
         std::cerr << "Assertion failed: " << message 
-                  << " (expected " << b << ", got " << a << ")" << std::endl;
+                  << " (expected " << bv << ", got " << av << ")" << std::endl;
         std::exit(1);
     }
 }
