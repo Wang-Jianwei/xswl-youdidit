@@ -368,8 +368,9 @@ TaskResult Task::execute(const std::string &input) {
 
     TaskStatus current_status = status();
     if (current_status != TaskStatus::Claimed && current_status != TaskStatus::Processing) {
+        // 统一使用 TASK_STATUS_INVALID 表示“在当前状态下不允许该操作”以保持一致性
         return Error("Task must be claimed or processing to execute",
-                                         ErrorCode::TASK_INVALID_STATE);
+                                         ErrorCode::TASK_STATUS_INVALID);
     }
 
     // 设置为处理中状态

@@ -43,6 +43,11 @@ add_executable(test_concurrent_execution unit/test_concurrent_execution.cpp)
 set_target_properties(test_concurrent_execution PROPERTIES OUTPUT_NAME "${EASY_EXECUTABLE_PREFIX}test_concurrent_execution")
 target_link_libraries(test_concurrent_execution youdidit Threads::Threads)
 
+# test_finalize_idempotent
+add_executable(test_finalize_idempotent unit/test_finalize_idempotent.cpp)
+set_target_properties(test_finalize_idempotent PROPERTIES OUTPUT_NAME "${EASY_EXECUTABLE_PREFIX}test_finalize_idempotent")
+target_link_libraries(test_finalize_idempotent youdidit Threads::Threads)
+
 # Web tests 已迁移到 `web/tests/` 子工程
 
 # 集成测试

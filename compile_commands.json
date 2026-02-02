@@ -66,6 +66,11 @@
 },
 {
   "directory": "D:/workdir/open_source/xswl-youdidit/build/tests",
+  "command": "D:\\Qt\\Qt5.14.2\\Tools\\mingw730_64\\bin\\c++.exe  @CMakeFiles/test_finalize_idempotent.dir/includes_CXX.rsp -O3 -DNDEBUG -Wall -Wextra -Wpedantic -std=c++11 -o CMakeFiles\\test_finalize_idempotent.dir\\unit\\test_finalize_idempotent.cpp.obj -c D:\\workdir\\open_source\\xswl-youdidit\\tests\\unit\\test_finalize_idempotent.cpp",
+  "file": "D:/workdir/open_source/xswl-youdidit/tests/unit/test_finalize_idempotent.cpp"
+},
+{
+  "directory": "D:/workdir/open_source/xswl-youdidit/build/tests",
   "command": "D:\\Qt\\Qt5.14.2\\Tools\\mingw730_64\\bin\\c++.exe  @CMakeFiles/integration_test_workflow.dir/includes_CXX.rsp -O3 -DNDEBUG -Wall -Wextra -Wpedantic -std=c++11 -o CMakeFiles\\integration_test_workflow.dir\\integration\\test_workflow.cpp.obj -c D:\\workdir\\open_source\\xswl-youdidit\\tests\\integration\\test_workflow.cpp",
   "file": "D:/workdir/open_source/xswl-youdidit/tests/integration/test_workflow.cpp"
 },

@@ -388,31 +388,33 @@ tl::expected<void, Error> Claimer::complete_task(const TaskId &task_id, const Ta
     auto task = task_opt.value();
     TaskStatus old_status = task->status();
     
-    // 如果任务是 Claimed 状态,先转换到 Processing
+    // 如果任务是 Claimed 状态,先转换到 Processing（以满足状态机）
     if (old_status == TaskStatus::Claimed) {
         task->set_status(TaskStatus::Processing);
     }
     
-    // 设置任务为已完成
+    // 设置任务为已完成（Task 内部会触发 Task::sig_completed）
     task->set_status(TaskStatus::Completed);
     task->set_progress(100);
     task->set_completed_at(std::chrono::system_clock::now());
     
-    // 触发信号
-    emit sig_task_completed(*this, task, result);
-    
-    // 从已申领任务列表中移除已完成的任务，并减少活跃任务计数
+    // 尝试从已申领任务列表中移除已完成的任务，并减少活跃任务计数
+    bool removed = false;
     {
         std::lock_guard<std::mutex> lock(d->data_mutex_);
         auto it = d->claimed_tasks_.find(task_id);
         if (it != d->claimed_tasks_.end()) {
             d->claimed_tasks_.erase(it);
             d->active_task_count_.fetch_sub(1, std::memory_order_acq_rel);
+            removed = true;
         }
     }
     
-    // 更新统计
-    _update_statistics(old_status, TaskStatus::Completed);
+    // 只有第一个成功移除任务的调用者负责触发 Claimer 层信号与统计更新
+    if (removed) {
+        emit sig_task_completed(*this, task, result);
+        _update_statistics(old_status, TaskStatus::Completed);
+    }
     
     return {};
 }
@@ -426,20 +428,25 @@ tl::expected<void, Error> Claimer::abandon_task(const TaskId &task_id, const std
     auto task = task_opt.value();
     TaskStatus old_status = task->status();
     
-    // 设置任务为已放弃
+    // 设置任务为已放弃（Task 层会发出失败/放弃信号）
     task->set_status(TaskStatus::Abandoned);
     
-    // 触发信号
-    emit sig_task_abandoned(*this, task, reason);
-    
-    // 更新统计
-    _update_statistics(old_status, TaskStatus::Abandoned);
-    
-    // 从已申领任务列表中移除
+    // 尝试从已申领任务列表中移除，并减少活跃任务计数
+    bool removed = false;
     {
         std::lock_guard<std::mutex> lock(d->data_mutex_);
-        d->claimed_tasks_.erase(task_id);
-        d->active_task_count_.fetch_sub(1, std::memory_order_acq_rel);
+        auto it = d->claimed_tasks_.find(task_id);
+        if (it != d->claimed_tasks_.end()) {
+            d->claimed_tasks_.erase(it);
+            d->active_task_count_.fetch_sub(1, std::memory_order_acq_rel);
+            removed = true;
+        }
+    }
+    
+    // 只有第一个成功移除任务的调用者负责触发 Claimer 层信号与统计更新
+    if (removed) {
+        emit sig_task_abandoned(*this, task, reason);
+        _update_statistics(old_status, TaskStatus::Abandoned);
     }
     
     return {};

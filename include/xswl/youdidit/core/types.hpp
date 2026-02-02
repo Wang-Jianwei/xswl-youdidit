@@ -139,7 +139,6 @@ enum class ErrorCode {
     TASK_STATUS_INVALID = 1002,       ///< 任务状态不允许此操作
     TASK_ALREADY_CLAIMED = 1003,      ///< 任务已被其他申领者申领
     TASK_CATEGORY_MISMATCH = 1004,    ///< 任务分类不匹配
-    TASK_INVALID_STATE = 1005,        ///< 任务状态无效
     TASK_EXECUTION_FAILED = 1006,     ///< 任务执行失败
     TASK_NO_HANDLER = 1007,           ///< 任务没有设置处理函数
     
