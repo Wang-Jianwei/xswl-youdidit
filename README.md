@@ -24,7 +24,7 @@
 
 ## 📋 项目简介
 
-**xswl-youdidit** 是一个任务分布式处理平台，模拟真实世界的赏金榜系统。通过游戏化的任务交互机制，支持任务发布者、申领者、分派者等多角色协作，实现高效的异步任务处理与状态追踪。
+**xswl-youdidit** 是一个分布式任务处理平台，模拟真实世界的赏金榜系统。通过游戏化的任务交互机制，支持任务发布者、申领者、分派者等多角色协作，实现高效的异步任务处理与状态追踪。
 
 ### 设计理念
 
@@ -71,7 +71,7 @@
 
 - C++11 或更高版本
 - CMake 3.10+
-- GCC/Clang 编译器（或 MinGW on Windows）
+- GCC/Clang 编译器（或在 Windows 上使用 MinGW）
 - Python 3（可选，用于测试结果分析）
 
 ### 构建项目
@@ -81,8 +81,8 @@
 git clone https://github.com/Wang-Jianwei/xswl-youdidit.git
 cd xswl-youdidit
 
-# 初始化 git submodule（下载 xswl-signals）
-git submodule update --init --recursive
+# 初始化子模块（下载 xswl-signals）
+git submodule update --init --recursive  # 初始化子模块（下载 xswl-signals）
 ```
 
 ### 使用构建脚本（推荐）
@@ -137,25 +137,66 @@ python3 analyze_tests.py [构建目录]
 
 ### Windows PowerShell 构建脚本
 
-本项目同时提供了适用于 Windows 的 PowerShell 脚本：
+本项目同时提供了适用于 Windows 的 PowerShell 脚本（建议使用 PowerShell 7+）。脚本支持清理、构建、运行测试与示例，且为常见 Windows 场景做了兼容处理。
+
+基本用法：
 
 ```powershell
-# 推荐使用 PowerShell 7+，脚本文件需保存为 UTF-8 (带 BOM) 或 UTF-16 LE (Unicode)
 # 查看帮助
-./build_and_test.ps1 -Help
+.\build_and_test.ps1 -Help
 
-# 清空后完整构建与测试
-./build_and_test.ps1 -Clean -All
+# 清空构建目录后完整构建与测试（示例）
+.\build_and_test.ps1 -Clean -All
 
 # 仅运行单元测试
-./build_and_test.ps1 -Unit
+.\build_and_test.ps1 -Unit
+
+# 仅构建并运行示例
+.\build_and_test.ps1 -Examples
 
 # 指定并行数
-./build_and_test.ps1 -J 4
+.\build_and_test.ps1 -J 4
 ```
 
-> ⚠️ **注意：** 若脚本出现乱码或解析错误，请确保 `build_and_test.ps1` 文件编码为 UTF-8 (带 BOM) 或 UTF-16 LE (Unicode)。
-> 可用 `tools/convert_encoding.ps1` 脚本安全转换编码。
+运行示例与测试（常用操作）
+
+- 使用脚本（推荐）：
+  - 构建并运行所有示例（含 Web 示例需使用 `-ForceWeb` 或设置环境变量）：
+    `.\build_and_test.ps1 -Examples -ForceWeb`
+  - 构建并运行测试：
+    `.\build_and_test.ps1 -Unit`
+
+- 手动构建（使用 Visual Studio / MSVC）：
+  - 打开“Developer PowerShell for VS”或相应的开发者命令提示符，然后执行：
+    ```powershell
+    mkdir build; cd build
+    cmake .. -DCMAKE_BUILD_TYPE=Release
+    cmake --build . --config Release -j 4
+    ctest -C Release --output-on-failure
+    ```
+
+- 手动构建（使用 MinGW / Ninja）：
+  - 在 PowerShell 中（确保 MinGW/Ninja 在 PATH）执行：
+    ```powershell
+    mkdir build; cd build
+    cmake -G "Ninja" .. -DCMAKE_BUILD_TYPE=Release
+    ninja -j 4
+    ctest --output-on-failure
+    ```
+
+运行构建产物：
+
+- 可直接运行可执行文件，例如：
+  ```powershell
+  .\build\examples\easy-example_basic_usage.exe
+  .\build\examples\easy-example_perf_monitor.exe 8000 5 "5-5" perf_report.html 50 100000 2000 500000 "A,B,C,D,E"
+  ```
+- 测试可执行文件位于 `build\tests\`，也可以直接运行这些 exe 或使用 `ctest`。
+
+编码与权限注意：
+> ⚠️ **注意：** 若脚本出现乱码或解析错误，请确保 `build_and_test.ps1` 文件编码为 UTF-8 (带 BOM) 或 UTF-16 LE (Unicode)。可用 `tools/convert_encoding.ps1` 脚本安全转换编码。
+> 执行脚本时，若遇到执行策略限制，可在具有管理员权限的 PowerShell 中临时设置（仅当前会话）：
+> `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process`。
 
 ### 手动构建与测试
 
@@ -220,7 +261,7 @@ $env:FORCE_BUILD_WEB = '1'; .\build_and_test.ps1
 
 ## ☁️ 在 Codespaces 中快速开始
 
-如果您在 GitHub Codespaces 中工作，可以直接运行 Web 仪表板！
+如果您在 GitHub Codespaces 中工作，可直接运行并访问 Web 仪表板（Dashboard）！
 
 ```bash
 # 启动 Web 仪表板演示（带友好的 UI 提示）
@@ -312,7 +353,7 @@ using TaskHandler = std::function<TaskResult(
 return TaskResult::Failure(Error("处理失败原因", ErrorCode::TASK_EXECUTION_FAILED));
 ```
 
-> **设计说明**：`input` 参数使用简单的 `std::string`，用户可仠据需要传入文件路径、JSON 字符串、配置文本等任意格式，在 handler 内自行解析。
+> **设计说明**：`input` 参数使用简单的 `std::string`，用户可根据需要传入文件路径、JSON 字符串、配置文本等任意格式，在 handler 内自行解析。
 
 有关开发者/实现细节（示例代码、状态机、角色接口、Claimer API 等）已移至：
 

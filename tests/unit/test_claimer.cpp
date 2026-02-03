@@ -48,7 +48,7 @@ void test_constructor() {
     assert_equal(claimer.name(), "Alice", "Name should match");
     assert_true(claimer.status().is_idle(), "Initial status should be Idle");
     assert_equal(claimer.max_concurrent_tasks(), 5, "Default max concurrent should be 5");
-    assert_equal(claimer.active_task_count(), 0, "Initial active count should be 0");
+    assert_equal(claimer.claimed_task_count(), 0, "Initial claimed count should be 0");
     assert_equal(claimer.total_claimed(), 0, "Total claimed should be 0");
     assert_equal(claimer.total_completed(), 0, "Total completed should be 0");
     assert_equal(claimer.total_failed(), 0, "Total failed should be 0");
@@ -197,13 +197,13 @@ void test_claim_single_task() {
     assert_true(claim_signal_emitted, "Claim signal should be emitted");
     assert_true(task->status() == TaskStatus::Claimed, "Task status should be Claimed");
     assert_equal(task->claimer_id(), "claimer-007", "Task claimer ID should match");
-    assert_equal(claimer.active_task_count(), 1, "Active task count should be 1");
+    assert_equal(claimer.claimed_task_count(), 1, "Claimed task count should be 1");
     assert_equal(claimer.total_claimed(), 1, "Total claimed should be 1");
 
     // 将申领者设置为 Paused，但由于仍有活跃任务，应仍被视为正在工作
     claimer.set_paused(true);
     assert_true(claimer.status().is_paused(), "Status should be Paused");
-    assert_true(claimer.status().is_working(), "Status should indicate working when there are active tasks");
+    assert_true(claimer.status().has_claimed_tasks(), "Status should indicate claimed tasks when there are active tasks");
 
     std::cout << "PASSED" << std::endl;
 }
@@ -393,7 +393,7 @@ void test_abandon_task() {
                       .build_and_publish();
     
     claimer.claim_task(task);
-    assert_equal(claimer.active_task_count(), 1, "Active count should be 1");
+    assert_equal(claimer.claimed_task_count(), 1, "Claimed count should be 1");
     
     bool abandoned_signal = false;
     claimer.sig_task_abandoned.connect([&](Claimer &, std::shared_ptr<Task>, const std::string &) {
@@ -406,7 +406,7 @@ void test_abandon_task() {
     assert_true(abandoned_signal, "Abandoned signal should be emitted");
     assert_true(task->status() == TaskStatus::Abandoned, "Task should be abandoned");
     assert_equal(claimer.total_abandoned(), 1, "Total abandoned should be 1");
-    assert_equal(claimer.active_task_count(), 0, "Active count should be 0");
+    assert_equal(claimer.claimed_task_count(), 0, "Claimed count should be 0");
     
     std::cout << "PASSED" << std::endl;
 }

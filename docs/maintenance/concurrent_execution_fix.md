@@ -7,7 +7,7 @@
 1. **重复触发信号**：`sig_task_started` 会被多次触发
 2. **重复执行**：任务的 `execute()` 方法会被多个线程同时调用
 3. **统计错误**：`complete_task()` 或 `abandon_task()` 会被多次调用，导致：
-   - `active_task_count` 被多次递减，可能变为负数
+   - `claimed_task_count` 被多次递减，可能变为负数
    - `total_completed` 或 `total_abandoned` 被重复计数
    - 任务可能被从 `claimed_tasks_` 中多次移除
 

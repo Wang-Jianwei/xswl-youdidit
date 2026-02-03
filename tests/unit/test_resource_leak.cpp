@@ -30,9 +30,9 @@ int main() {
     }
 
     // 验证申领计数
-    if (claimer->active_task_count() != N_TASKS) {
-        std::cerr << "Active task count should be " << N_TASKS 
-                  << ", got: " << claimer->active_task_count() << std::endl;
+    if (claimer->claimed_task_count() != N_TASKS) {
+        std::cerr << "Claimed task count should be " << N_TASKS 
+                  << ", got: " << claimer->claimed_task_count() << std::endl;
         return 1;
     }
 
@@ -42,9 +42,9 @@ int main() {
     }
 
     // 验证清理后计数
-    if (claimer->active_task_count() != 0) {
-        std::cerr << "Active task count should be 0 after abandon, got: " 
-                  << claimer->active_task_count() << std::endl;
+    if (claimer->claimed_task_count() != 0) {
+        std::cerr << "Claimed task count should be 0 after abandon, got: " 
+                  << claimer->claimed_task_count() << std::endl;
         return 1;
     }
 

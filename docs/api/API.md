@@ -66,7 +66,7 @@ static TaskStatus from_string(const std::string &str);  // 从字符串解析
 struct ClaimerState {
     bool online;                // 在线/离线
     bool accepting_new_tasks;   // 是否接收新任务（paused）
-    int active_task_count;      // 当前活跃任务数
+    int claimed_task_count;      // 当前已申领任务数
     int max_concurrent;         // 最大并发任务数
     bool is_idle() const;
     bool is_working() const;
@@ -512,7 +512,7 @@ public:
     // ========== 状态信息 ==========
     
     ClaimerState status() const noexcept;                 // 线程安全，返回描述性状态结构
-    int active_task_count() const noexcept;                // 线程安全，原子操作
+    int claimed_task_count() const noexcept;                // 线程安全，原子操作
     std::vector<TaskId> claimed_tasks() const;             // 线程安全，返回副本
     
     // ========== 统计信息 ==========
@@ -933,7 +933,7 @@ private:
 
 ### Claimer 类
 - `status()` / `set_status()`
-- `active_task_count()`
+- `claimed_task_count()`
 - `claimed_tasks()`
 - `claim_task()` / `claim_next_task()` / `claim_matching_task()` / `claim_tasks_to_capacity()`
 - `complete_task()`
@@ -1054,7 +1054,7 @@ class Claimer {
 public:
     // 基本操作 - 不抛出异常，使用简洁命名
     ClaimerState status() const noexcept;
-    int active_task_count() const noexcept;
+    int claimed_task_count() const noexcept;
     std::string id() const noexcept;
     
     // 可能失败的操作 - 使用 expected 返回，不标注 noexcept
@@ -1221,7 +1221,7 @@ public:
     const std::string &id() const noexcept;
     const std::string &name() const noexcept;
     ClaimerState status() const noexcept;
-    int active_task_count() const noexcept;
+    int claimed_task_count() const noexcept;
     
     // ========== Setter 方法 (返回引用用于链式调用) ==========
     // set_status 已移除：使用 set_paused()/set_offline()/set_max_concurrent() 等方法
@@ -1373,7 +1373,7 @@ if (result) {
 申领者调用 claim_tasks_to_capacity()
     ↓
 计算还能申领的任务数: 
-  capacity = max_concurrent_tasks - active_task_count
+  capacity = max_concurrent_tasks - claimed_task_count
     ↓
 如果 capacity <= 0，返回空列表
     ↓
@@ -1388,7 +1388,7 @@ if (result) {
 
 | 错误 | 原因 | 触发条件 | 解决方案 |
 |------|------|---------|---------|
-| `Too many active tasks` | 已达最大并发数 | `active_task_count >= max_concurrent_tasks` | 等待任务完成或增加 `max_concurrent` |
+| `Too many active tasks` | 已达最大并发数 | `claimed_task_count >= max_concurrent_tasks` | 等待任务完成或增加 `max_concurrent` |
 | `Task not found` | 任务 ID 不存在 | 指定的 task_id 在平台中不存在 | 确认任务 ID 正确 |
 | `Task status is not Published` | 任务已被申领或已完成 | 任务状态不是 Published | 重新查询可用任务 |
 | `Claimer is blocked` | 被发布者禁止 | 申领者 ID 在任务禁止列表中 | 联系发布者解除禁用 |

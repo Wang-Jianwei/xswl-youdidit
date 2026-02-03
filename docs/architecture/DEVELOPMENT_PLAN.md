@@ -263,7 +263,7 @@ enum class TaskStatus {
 struct ClaimerState {
     bool online;
     bool accepting_new_tasks;
-    int active_task_count;
+    int claimed_task_count;
     int max_concurrent;
     // 辅助方法：is_idle(), is_working(), is_busy(), is_paused(), is_offline()
 };
@@ -564,7 +564,7 @@ private:
 | `claim_tasks_to_capacity()` | 循环调用 claim_next_task() 直到达到最大并发 |
 | `execute_task()` | 开始任务 → 调用 task.execute() → 处理结果 |
 | `complete_task()` | 更新任务状态 → 更新统计 → 触发信号 |
-| `can_claim_more()` | 比较 active_task_count 和 max_concurrent_tasks |
+| `can_claim_more()` | 比较 claimed_task_count 和 max_concurrent_tasks |
 
 **申领权限检查流程**：
 
@@ -714,7 +714,7 @@ public:
 | Task | status | `std::atomic<TaskStatus>` |
 | Task | progress | `std::atomic<int>` |
 | Claimer | status | `ClaimerState` |
-| Claimer | active_task_count | `std::atomic<int>` |
+| Claimer | claimed_task_count | `std::atomic<int>` |
 | TaskPlatform | total_completed | `std::atomic<size_t>` |
 | TaskPlatform | total_failed | `std::atomic<size_t>` |
 

@@ -27,7 +27,7 @@ int main() {
     // Claimer 不应再认为自己持有该任务
     if (claimer->has_task("t1")) { std::cerr << "claimer still has task" << std::endl; return 1; }
 
-    if (claimer->active_task_count() != 0) { std::cerr << "active_task_count != 0" << std::endl; return 1; }
+    if (claimer->claimed_task_count() != 0) { std::cerr << "claimed_task_count != 0" << std::endl; return 1; }
 
     std::cout << "PASSED" << std::endl;
     return 0;

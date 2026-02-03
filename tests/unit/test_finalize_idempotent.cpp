@@ -34,8 +34,8 @@ bool test_complete_idempotent() {
         std::cerr << "total_completed != 1: " << claimer->total_completed() << std::endl;
         return false;
     }
-    if (claimer->active_task_count() != 0) {
-        std::cerr << "active_task_count != 0: " << claimer->active_task_count() << std::endl;
+    if (claimer->claimed_task_count() != 0) {
+        std::cerr << "claimed_task_count != 0: " << claimer->claimed_task_count() << std::endl;
         return false;
     }
     return true;
@@ -67,8 +67,8 @@ bool test_abandon_idempotent() {
         std::cerr << "total_abandoned != 1: " << claimer->total_abandoned() << std::endl;
         return false;
     }
-    if (claimer->active_task_count() != 0) {
-        std::cerr << "active_task_count != 0: " << claimer->active_task_count() << std::endl;
+    if (claimer->claimed_task_count() != 0) {
+        std::cerr << "claimed_task_count != 0: " << claimer->claimed_task_count() << std::endl;
         return false;
     }
     return true;

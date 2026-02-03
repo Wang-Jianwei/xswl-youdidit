@@ -128,7 +128,7 @@ std::vector<WebDashboard::ClaimerSummary> WebDashboard::get_claimers_summary() c
         summary.id = claimer->id();
         summary.name = claimer->name();
         summary.status = claimer->status();
-        summary.active_task_count = claimer->active_task_count();
+        summary.claimed_task_count = claimer->claimed_task_count();
         summary.total_completed = claimer->total_completed();
         summary.total_failed = claimer->total_failed();
         summaries.push_back(summary);

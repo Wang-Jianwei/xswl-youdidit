@@ -38,7 +38,7 @@ public:
     std::string name() const;                 // 返回副本，线程安全
     ClaimerState status() const noexcept;     // 计算属性，无锁（返回描述性状态结构）
     int max_concurrent_tasks() const noexcept;  // atomic
-    int active_task_count() const noexcept;     // atomic
+    int claimed_task_count() const noexcept;     // atomic - 当前已申领的任务数
     
     // 角色和分类
     std::set<std::string> roles() const;       // 返回副本
@@ -59,7 +59,7 @@ public:
     
     /**
      * @brief 手动设置状态（已废弃）
-     * @deprecated 状态现在根据active_task_count自动计算
+     * @deprecated 状态现在根据 claimed_task_count 自动计算
      * @note 如需暂停接收任务，请使用 set_paused(true)
      */
     // 旧的 set_status 已移除：请使用 set_paused()/set_offline()/set_max_concurrent() 等方法来控制状态
@@ -174,7 +174,7 @@ public:
      * @return 当以下条件全部满足时返回 true：
      *         - 未处于 Offline 状态
      *         - 未处于 Paused 状态
-     *         - active_task_count < max_concurrent_tasks
+     *         - claimed_task_count < max_concurrent_tasks
      */
     bool can_claim_more() const noexcept;
     

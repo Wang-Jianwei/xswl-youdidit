@@ -54,10 +54,10 @@ public:
         std::string id;
         std::string name;
         ClaimerState status;
-        int active_task_count;
+        int claimed_task_count;
         std::uint64_t total_completed;
         std::uint64_t total_failed;
-    };
+    }; 
 
     std::vector<TaskSummary> get_tasks_summary() const;
     std::vector<ClaimerSummary> get_claimers_summary() const;

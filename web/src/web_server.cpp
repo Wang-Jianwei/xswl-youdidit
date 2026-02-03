@@ -151,7 +151,7 @@ void WebServer::_setup_routes() {
                 << "\"id\":\"" << claimers[i].id << "\","
                 << "\"name\":\"" << claimers[i].name << "\","
                 << "\"status\":\"" << to_string(claimers[i].status) << "\","
-                << "\"active_task_count\":" << claimers[i].active_task_count << ","
+                << "\"claimed_task_count\":" << claimers[i].claimed_task_count << ","
                 << "\"total_completed\":" << claimers[i].total_completed << ","
                 << "\"total_failed\":" << claimers[i].total_failed
                 << "}";
@@ -459,7 +459,7 @@ async function tick() {
 
         // Claimers
         $('claimer-list').innerHTML = c.map(x => {
-            const active = x.active_task_count > 0;
+            const active = x.claimed_task_count > 0;
             const stColor = active ? '#4ade80' : '#475569';
             return `
             <div class="claimer-item">
@@ -469,7 +469,7 @@ async function tick() {
                 </div>
                 <div style="text-align:right">
                     <div style="font-size:10px; color:${stColor}; font-weight:600">${active ? 'BUSY' : 'IDLE'}</div>
-                    <div style="font-size:10px; color:#64748b">Load: ${x.active_task_count}</div>
+                    <div style="font-size:10px; color:#64748b">Load: ${x.claimed_task_count}</div>
                 </div>
             </div>`;
         }).join('');

@@ -72,8 +72,8 @@ int main() {
 
     // 活跃计数应为 0
     for (const auto &c : claimers) {
-        if (c->active_task_count() != 0) {
-            std::cerr << "Claimer " << c->id() << " active_task_count != 0: " << c->active_task_count() << std::endl;
+        if (c->claimed_task_count() != 0) {
+            std::cerr << "Claimer " << c->id() << " claimed_task_count != 0: " << c->claimed_task_count() << std::endl;
             return 1;
         }
     }

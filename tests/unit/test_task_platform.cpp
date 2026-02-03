@@ -76,7 +76,7 @@ void test_register_and_claim_by_id() {
     assert_true(result.has_value(), "Claim should succeed");
     assert_true(task->status() == TaskStatus::Claimed, "Task should be claimed");
     assert_equal(task->claimer_id(), "claimer-01", "Claimer id should be set on task");
-    assert_equal(claimer->active_task_count(), 1, "Claimer active tasks should be 1");
+    assert_equal(claimer->claimed_task_count(), 1, "Claimer claimed tasks should be 1");
     std::cout << "PASSED" << std::endl;
 }
 
@@ -158,7 +158,7 @@ void test_claim_tasks_to_capacity() {
 
     auto tasks = claimer->claim_tasks_to_capacity();
     assert_equal(static_cast<int>(tasks.size()), 2, "Should claim up to capacity");
-    assert_equal(claimer->active_task_count(), 2, "Active task count should be 2");
+    assert_equal(claimer->claimed_task_count(), 2, "Claimed task count should be 2");
     std::cout << "PASSED" << std::endl;
 }
 

@@ -140,7 +140,7 @@ $ curl http://localhost:8080/api/claimers
     "id": "claimer-001",
     "name": "Worker 1",
     "status": "Active",
-    "active_task_count": 5,
+    "claimed_task_count": 5,
     "total_completed": 50,
     "total_failed": 2
   }

@@ -25,7 +25,7 @@ public:
     std::atomic<bool> paused_;      // 是否暂停接收任务
     std::atomic<bool> offline_;     // 是否离线
     std::atomic<int> max_concurrent_tasks_;
-    std::atomic<int> active_task_count_;
+    std::atomic<int> claimed_task_count_;
     
     // 角色和分类
     std::set<std::string> roles_;
@@ -55,7 +55,7 @@ public:
           paused_(false),
           offline_(false),
           max_concurrent_tasks_(5),
-          active_task_count_(0),
+          claimed_task_count_(0),
           total_claimed_(0u),
           total_completed_(0u),
           total_failed_(0u),
@@ -67,7 +67,7 @@ public:
         ClaimerState s;
         s.online = !offline_.load(std::memory_order_acquire);
         s.accepting_new_tasks = !paused_.load(std::memory_order_acquire);
-        s.active_task_count = active_task_count_.load(std::memory_order_acquire);
+        s.claimed_task_count = claimed_task_count_.load(std::memory_order_acquire);
         s.max_concurrent = max_concurrent_tasks_.load(std::memory_order_acquire);
         return s;
     }
@@ -101,8 +101,8 @@ int Claimer::max_concurrent_tasks() const noexcept {
     return d->max_concurrent_tasks_.load(std::memory_order_acquire);
 }
 
-int Claimer::active_task_count() const noexcept {
-    return d->active_task_count_.load(std::memory_order_acquire);
+int Claimer::claimed_task_count() const noexcept {
+    return d->claimed_task_count_.load(std::memory_order_acquire);
 }
 
 std::set<std::string> Claimer::roles() const {
@@ -263,7 +263,7 @@ tl::expected<void, Error> Claimer::claim_task(std::shared_ptr<Task> task) {
     {
         std::lock_guard<std::mutex> lock(d->data_mutex_);
         d->claimed_tasks_[task->id()] = task;
-        d->active_task_count_.fetch_add(1, std::memory_order_acq_rel);
+        d->claimed_task_count_.fetch_add(1, std::memory_order_acq_rel);
         d->total_claimed_.fetch_add(1u, std::memory_order_acq_rel);
     }
     
@@ -406,14 +406,14 @@ tl::expected<void, Error> Claimer::complete_task(const TaskId &task_id, const Ta
         completed = true;
     }
 
-    // 从已申领任务列表中移除已完成的任务，并减少活跃任务计数（幂等）
+    // 从已申领任务列表中移除已完成的任务，并减少已申领任务计数（幂等）
     bool removed = false;
     {
         std::lock_guard<std::mutex> lock(d->data_mutex_);
         auto it = d->claimed_tasks_.find(task_id);
         if (it != d->claimed_tasks_.end()) {
             d->claimed_tasks_.erase(it);
-            d->active_task_count_.fetch_sub(1, std::memory_order_acq_rel);
+            d->claimed_task_count_.fetch_sub(1, std::memory_order_acq_rel);
             removed = true;
         }
     }
@@ -439,14 +439,14 @@ tl::expected<void, Error> Claimer::abandon_task(const TaskId &task_id, const std
     // 使用 Task::abandon 确保状态转换原子性并触发 Task 层信号
     (void)task->abandon(reason); // best-effort: 若失败说明其他线程已处理
 
-    // 尝试从已申领任务列表中移除，并减少活跃任务计数（幂等）
+    // 尝试从已申领任务列表中移除，并减少已申领任务计数（幂等）
     bool removed = false;
     {
         std::lock_guard<std::mutex> lock(d->data_mutex_);
         auto it = d->claimed_tasks_.find(task_id);
         if (it != d->claimed_tasks_.end()) {
             d->claimed_tasks_.erase(it);
-            d->active_task_count_.fetch_sub(1, std::memory_order_acq_rel);
+            d->claimed_task_count_.fetch_sub(1, std::memory_order_acq_rel);
             removed = true;
         }
     }
@@ -505,7 +505,7 @@ bool Claimer::can_claim_more() const noexcept {
         return false;
     }
     // 检查并发容量
-    return active_task_count() < max_concurrent_tasks();
+    return claimed_task_count() < max_concurrent_tasks();
 }
 
 bool Claimer::has_task(const TaskId &task_id) const {
@@ -593,7 +593,7 @@ tl::expected<void, Error> Claimer::_check_claim_permission(const std::shared_ptr
 }
 
 void Claimer::_update_statistics(TaskStatus /*old_status*/, TaskStatus new_status) {
-    // 注意：active_task_count 在 complete_task 和 abandon_task 中已经处理
+    // 注意：claimed_task_count 在 complete_task 和 abandon_task 中已经处理
     // 这里只更新完成/失败计数
     if (new_status == TaskStatus::Completed) {
         d->total_completed_.fetch_add(1u, std::memory_order_acq_rel);

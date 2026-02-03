@@ -41,7 +41,7 @@ void test_claimer_state_to_string() {
     // 默认表示 Idle
     assert(to_string(s) == "Idle");
     // Busy
-    ClaimerState busy; busy.active_task_count = 1; busy.max_concurrent = 1;
+    ClaimerState busy; busy.claimed_task_count = 1; busy.max_concurrent = 1;
     assert(to_string(busy) == "Busy");
     // Paused
     ClaimerState paused; paused.accepting_new_tasks = false;
@@ -50,12 +50,12 @@ void test_claimer_state_to_string() {
     ClaimerState offline; offline.online = false;
     assert(to_string(offline) == "Offline");
     // Working
-    ClaimerState w; w.active_task_count = 1; w.max_concurrent = 3;
+    ClaimerState w; w.claimed_task_count = 1; w.max_concurrent = 3;
     assert(to_string(w) == "Working");
 
-    // Paused but still has active tasks -> 应仍被认为是在工作中，展示优先级为 Paused
-    ClaimerState pw; pw.accepting_new_tasks = false; pw.active_task_count = 1; pw.max_concurrent = 3;
-    assert(pw.is_working() == true);
+    // Paused but still has claimed tasks -> 应仍被认为有已申领任务，展示优先级为 Paused
+    ClaimerState pw; pw.accepting_new_tasks = false; pw.claimed_task_count = 1; pw.max_concurrent = 3;
+    assert(pw.has_claimed_tasks() == true);
     assert(to_string(pw) == "Paused");
 
     std::cout << "✓ test_claimer_state_to_string passed" << std::endl;

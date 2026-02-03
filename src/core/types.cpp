@@ -57,7 +57,7 @@ std::string to_string(const ClaimerState &state) {
     if (state.is_offline()) return "Offline";
     if (state.is_paused()) return "Paused";
     if (state.is_busy()) return "Busy";
-    if (state.is_working()) return "Working";
+    if (state.has_claimed_tasks()) return "Working";
     if (state.is_idle()) return "Idle";
     return "Unknown";
 }
@@ -66,9 +66,9 @@ tl::optional<ClaimerState> claimer_state_from_string(const std::string &str) {
     if (str == "Idle") {
         return ClaimerState{}; // defaults represent Idle
     } else if (str == "Working") {
-        ClaimerState s; s.active_task_count = 1; s.max_concurrent = 2; return s;
+        ClaimerState s; s.claimed_task_count = 1; s.max_concurrent = 2; return s;
     } else if (str == "Busy") {
-        ClaimerState s; s.active_task_count = 1; s.max_concurrent = 1; return s;
+        ClaimerState s; s.claimed_task_count = 1; s.max_concurrent = 1; return s;
     } else if (str == "Paused") {
         ClaimerState s; s.accepting_new_tasks = false; return s;
     } else if (str == "Offline") {

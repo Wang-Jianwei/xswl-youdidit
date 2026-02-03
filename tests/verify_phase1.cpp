@@ -31,7 +31,7 @@ int main() {
     // 3. ClaimerState 示例
     std::cout << "ClaimerState examples:\n";
     std::cout << "  Idle    -> " << to_string(ClaimerState{}) << "\n";
-    ClaimerState busy; busy.active_task_count = 1; busy.max_concurrent = 1;
+    ClaimerState busy; busy.claimed_task_count = 1; busy.max_concurrent = 1;
     std::cout << "  Busy    -> " << to_string(busy) << "\n";
     ClaimerState offline; offline.online = false;
     std::cout << "  Offline -> " << to_string(offline) << "\n\n";

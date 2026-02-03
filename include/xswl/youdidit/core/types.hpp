@@ -80,22 +80,22 @@ tl::optional<TaskStatus> task_status_from_string(const std::string &str);
  * 申领者真实状态由以下正交维度决定：
  *  - 在线/离线（online）
  *  - 是否接收新任务（accepting_new_tasks）
- *  - 当前活跃任务数与最大并发（active_task_count / max_concurrent）
+ *  - 当前已申领任务数与最大并发（claimed_task_count / max_concurrent）
  *
  * 以下是常用的便捷判断：Idle / Working / Busy / Paused / Offline
  */
 struct ClaimerState {
     bool online{true};                      ///< 可用状态：true=在线，false=离线
     bool accepting_new_tasks{true};         ///< 是否接收新任务：true=接收，false=暂停接收
-    int active_task_count{0};               ///< 当前活跃任务数
+    int claimed_task_count{0};              ///< 当前已申领（claimed）的任务数（不等同于正在 processing 的数量）
     int max_concurrent{5};                  ///< 最大并发任务数（默认值）
 
-    // 只要在线且无活跃任务即视为闲置
-    bool is_idle() const noexcept { return online && accepting_new_tasks && active_task_count == 0; }
-    // 只要有活跃任务（active_task_count > 0）即视为工作中
-    bool is_working() const noexcept { return online && active_task_count > 0; }
-    // 只要活跃任务数达到最大并发即视为忙碌
-    bool is_busy() const noexcept { return online && active_task_count >= max_concurrent; }
+    // 只要在线且无已申领任务即视为闲置
+    bool is_idle() const noexcept { return online && accepting_new_tasks && claimed_task_count == 0; }
+    // 只要有已申领任务（claimed_task_count > 0）即视为有工作负载（claimed）
+    bool has_claimed_tasks() const noexcept { return online && claimed_task_count > 0; }
+    // 只要活跃（claimed）任务数达到最大并发即视为忙碌
+    bool is_busy() const noexcept { return online && claimed_task_count >= max_concurrent; }
     // 在线但暂停接收新任务
     bool is_paused() const noexcept { return online && !accepting_new_tasks; }
     // 离线状态
@@ -103,7 +103,7 @@ struct ClaimerState {
 
     bool operator==(const ClaimerState &other) const noexcept {
         return online == other.online && accepting_new_tasks == other.accepting_new_tasks
-            && active_task_count == other.active_task_count && max_concurrent == other.max_concurrent;
+            && claimed_task_count == other.claimed_task_count && max_concurrent == other.max_concurrent;
     }
     bool operator!=(const ClaimerState &other) const noexcept {
         return !(*this == other);

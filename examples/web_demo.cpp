@@ -91,7 +91,7 @@ int main(int argc, char** argv) {
                 auto tasks = claimer->claim_tasks_to_capacity();
                 
                 if (!tasks.empty()) {
-                    // 状态现在会根据 active_task_count 自动计算为 Busy/Idle
+                    // 状态现在会根据 claimed_task_count 自动计算为 Busy/Idle
                     
                     // 执行已申领的任务
                     for (auto& task : tasks) {
@@ -103,7 +103,7 @@ int main(int argc, char** argv) {
                         claimer->run_task(task, "");
                     }
                 }
-                // 状态会自动变为 Idle（当 active_task_count == 0 时）
+                // 状态会自动变为 Idle（当 claimed_task_count == 0 时）
                 
                 // 短暂休息后继续
                 std::this_thread::sleep_for(std::chrono::milliseconds(300));

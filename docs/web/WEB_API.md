@@ -94,7 +94,7 @@ public:
         std::string name;
         std::string role;
         ClaimerState status;
-        int active_task_count;
+        int claimed_task_count;
         int max_concurrent_tasks;
         int total_completed;
         int total_failed;
@@ -518,7 +518,7 @@ youdidit_tasks_total{status="failed"} 10
       "name": "Alice",
       "role": "DataProcessor",
       "status": "Busy",
-      "active_task_count": 3,
+      "claimed_task_count": 3,
       "max_concurrent_tasks": 5,
       "total_completed": 150,
       "total_failed": 8,
@@ -543,7 +543,7 @@ youdidit_tasks_total{status="failed"} 10
   "status": "Busy",
   "skills": ["data_analysis", "machine_learning", "python"],
   "categories": ["analytics", "data_processing"],
-  "active_task_count": 3,
+  "claimed_task_count": 3,
   "max_concurrent_tasks": 5,
   "claimed_tasks": ["task-001", "task-002", "task-003"],
   "statistics": {
@@ -835,7 +835,7 @@ struct ClaimerSummary {
     std::string name;
     std::string role;
     ClaimerState status;
-    int active_task_count;
+    int claimed_task_count;
     int max_concurrent_tasks;
     int total_completed;
     int total_failed;

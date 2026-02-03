@@ -357,7 +357,7 @@ TaskPlatform
 ```
 
 **关键：** `run_task_async` 内部负责：
-1. 增加 `active_task_count`
+1. 增加 `claimed_task_count`
 2. 执行完成后调用 `complete_task` 或 `abandon_task`
 3. 触发信号（`sig_task_started`, `sig_task_completed` 等）
 

@@ -92,7 +92,7 @@ bool test_capacity_and_matching() {
         seen_ids.push_back(task->id());
     }
 
-    TEST_ASSERT(claimer->active_task_count() == 2, "Active task count should reflect capacity");
+    TEST_ASSERT(claimer->claimed_task_count() == 2, "Claimed task count should reflect capacity");
 
     return true;
 }
