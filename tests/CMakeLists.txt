@@ -58,6 +58,11 @@ add_executable(test_signal_once unit/test_signal_once.cpp)
 set_target_properties(test_signal_once PROPERTIES OUTPUT_NAME "${EASY_EXECUTABLE_PREFIX}test_signal_once")
 target_link_libraries(test_signal_once youdidit Threads::Threads)
 
+# test_signals_lifecycle (lifetime and scoped_connection tests)
+add_executable(test_signals_lifecycle unit/test_signals_lifecycle.cpp)
+set_target_properties(test_signals_lifecycle PROPERTIES OUTPUT_NAME "${EASY_EXECUTABLE_PREFIX}test_signals_lifecycle")
+target_link_libraries(test_signals_lifecycle youdidit Threads::Threads)
+
 # test_stress_concurrent_claims
 add_executable(test_stress_concurrent_claims unit/test_stress_concurrent_claims.cpp)
 set_target_properties(test_stress_concurrent_claims PROPERTIES OUTPUT_NAME "${EASY_EXECUTABLE_PREFIX}test_stress_concurrent_claims")

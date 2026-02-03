@@ -16,11 +16,14 @@ int main() {
         void on_completed(const std::shared_ptr<Task> &t, const TaskResult &r) {
             std::cout << "[Platform] completed: " << t->id() << " -> " << r.summary << "\n";
         }
-    } logger;
+    };
 
-    // Connect platform signals
-    platform.sig_task_published.connect(&logger, &Logger::on_published, 100);
-    platform.sig_task_completed.connect(&logger, &Logger::on_completed);
+    // Use shared_ptr for logger to ensure safe lifetime when connecting as a slot target
+    auto logger = std::make_shared<Logger>();
+
+    // Connect platform signals (use shared_ptr to safely track lifetime)
+    platform.sig_task_published.connect(logger, &Logger::on_published, 100);
+    platform.sig_task_completed.connect(logger, &Logger::on_completed);
 
     // Create a claimer and connect signals
     auto claimer = std::make_shared<Claimer>("worker-1", "Worker One");

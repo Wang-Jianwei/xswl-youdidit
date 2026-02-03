@@ -1,4 +1,4 @@
-#ifndef XSWL_YOUDIT_WEB_TIME_REPLAY_HPP
+#ifndef XSWL_YOUDIDIT_WEB_TIME_REPLAY_HPP
 #define XSWL_YOUDIDIT_WEB_TIME_REPLAY_HPP
 
 #include <xswl/youdidit/web/event_log.hpp>
@@ -33,4 +33,4 @@ private:
 } // namespace youdidit
 } // namespace xswl
 
-#endif // XSWL_YOUDIT_WEB_TIME_REPLAY_HPP
+#endif // XSWL_YOUDIDIT_WEB_TIME_REPLAY_HPP
