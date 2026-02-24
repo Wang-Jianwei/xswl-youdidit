@@ -6,6 +6,7 @@
 
 ## 快速开始与用户指南
 - `docs/getting_started/BUILD_AND_TEST.md` — **构建与测试指南**（如何构建、运行单元/集成测试、示例运行）。
+- `docs/getting_started/INTEGRATION.md` — **宿主工程集成指南**（`add_subdirectory` / `find_package` 双路径模板）。
 - `docs/usage.md` — **使用示例集**（常见示例、演示代码片段、examples/ 目录示例索引）。
 - `docs/contributing.md` — **贡献指南**（如何撰写文档、提交 PR、文档风格与语言规则）。
 

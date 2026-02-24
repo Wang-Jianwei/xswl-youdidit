@@ -51,6 +51,10 @@ ctest --output-on-failure
 - Windows：`build_and_test.ps1`
 - Linux/macOS：`build_and_test.sh`
 
+## 集成到你的工程
+
+- 宿主工程集成模板（`add_subdirectory` / `find_package`）：`docs/getting_started/INTEGRATION.md`
+
 ---
 
 如需我把此文档补充更详细的环境安装步骤或示例运行说明（含输出样例），我可以继续完善。
