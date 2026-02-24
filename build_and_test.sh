@@ -8,8 +8,9 @@
 #   --unit          仅运行单元测试
 #   --integration   仅运行集成测试
 #   --examples      构建并运行示例程序
+#   --smoke         运行安装后 find_package 烟雾测试
 #   --all           运行所有测试与示例
-#   -j N            指定并行构建数（默认 $(nproc)）
+#   -j N            指定并行构建数（默认自动检测）
 
 set -e
 
@@ -26,11 +27,16 @@ PROJECT_ROOT="$SCRIPT_DIR"
 BUILD_DIR="$PROJECT_ROOT/build"
 
 # 默认参数
-PARALLEL=$(nproc)
+if command -v nproc >/dev/null 2>&1; then
+    PARALLEL=$(nproc 2>/dev/null || echo 1)
+else
+    PARALLEL=1
+fi
 CLEAN_BUILD=false
 RUN_UNIT=true
 RUN_INTEGRATION=true
 RUN_EXAMPLES=false
+RUN_SMOKE=false
 
 # 解析命令行参数
 while [[ $# -gt 0 ]]; do
@@ -46,8 +52,9 @@ while [[ $# -gt 0 ]]; do
             echo "  --unit          仅运行单元测试"
             echo "  --integration   仅运行集成测试"
             echo "  --examples      构建并运行示例程序"
+            echo "  --smoke         运行安装后 find_package 烟雾测试"
             echo "  --all           运行所有测试与示例"
-            echo "  -j N            指定并行构建数（默认 $(nproc)）"
+            echo "  -j N            指定并行构建数（默认 $PARALLEL）"
             exit 0
             ;;
         --clean)
@@ -70,12 +77,21 @@ while [[ $# -gt 0 ]]; do
             RUN_UNIT=false
             RUN_INTEGRATION=false
             RUN_EXAMPLES=true
+            RUN_SMOKE=false
+            shift
+            ;;
+        --smoke)
+            RUN_UNIT=false
+            RUN_INTEGRATION=false
+            RUN_EXAMPLES=false
+            RUN_SMOKE=true
             shift
             ;;
         --all)
             RUN_UNIT=true
             RUN_INTEGRATION=true
             RUN_EXAMPLES=true
+            RUN_SMOKE=true
             shift
             ;;
         -j)
@@ -111,6 +127,54 @@ print_warning() {
 if [ "$CLEAN_BUILD" = true ]; then
     print_step "清空旧的构建目录..."
     rm -rf "$BUILD_DIR"
+fi
+
+# 运行 find_package 集成烟雾测试（安装后消费者工程）
+if [ "$RUN_SMOKE" = true ]; then
+    print_step "运行 find_package 烟雾测试..."
+
+    SMOKE_SOURCE_DIR="$PROJECT_ROOT/tests/smoke/find_package_consumer"
+    SMOKE_BUILD_DIR="$BUILD_DIR/tests/find_package_consumer_build"
+    SMOKE_INSTALL_PREFIX="$BUILD_DIR/tests/find_package_consumer_install"
+
+    CACHE_FILE="$BUILD_DIR/CMakeCache.txt"
+    SMOKE_GENERATOR=""
+    SMOKE_MAKE_PROGRAM=""
+    SMOKE_BUILD_TYPE=""
+
+    if [ -f "$CACHE_FILE" ]; then
+        SMOKE_GENERATOR="$(grep '^CMAKE_GENERATOR:INTERNAL=' "$CACHE_FILE" | head -n1 | cut -d= -f2-)"
+        SMOKE_MAKE_PROGRAM="$(grep '^CMAKE_MAKE_PROGRAM:FILEPATH=' "$CACHE_FILE" | head -n1 | cut -d= -f2-)"
+        SMOKE_BUILD_TYPE="$(grep '^CMAKE_BUILD_TYPE:STRING=' "$CACHE_FILE" | head -n1 | cut -d= -f2-)"
+    fi
+
+    smoke_cmd=(
+        cmake
+        "-DROOT_BUILD_DIR=$BUILD_DIR"
+        "-DSMOKE_SOURCE_DIR=$SMOKE_SOURCE_DIR"
+        "-DSMOKE_BUILD_DIR=$SMOKE_BUILD_DIR"
+        "-DSMOKE_INSTALL_PREFIX=$SMOKE_INSTALL_PREFIX"
+    )
+
+    if [ -n "$SMOKE_GENERATOR" ]; then
+        smoke_cmd+=("-DSMOKE_GENERATOR=$SMOKE_GENERATOR")
+    fi
+    if [ -n "$SMOKE_MAKE_PROGRAM" ]; then
+        smoke_cmd+=("-DSMOKE_MAKE_PROGRAM=$SMOKE_MAKE_PROGRAM")
+    fi
+    if [ -n "$SMOKE_BUILD_TYPE" ]; then
+        smoke_cmd+=("-DSMOKE_BUILD_TYPE=$SMOKE_BUILD_TYPE")
+    fi
+
+    smoke_cmd+=("-P" "$PROJECT_ROOT/cmake/RunFindPackageSmoke.cmake")
+
+    if "${smoke_cmd[@]}"; then
+        print_success "find_package 烟雾测试通过"
+    else
+        print_error "find_package 烟雾测试失败"
+        exit 1
+    fi
+    echo ""
 fi
 
 # 创建构建目录
@@ -297,5 +361,6 @@ echo "  并行构建数: $PARALLEL"
 [ "$RUN_UNIT" = true ] && echo "  单元测试: 已运行"
 [ "$RUN_INTEGRATION" = true ] && echo "  集成测试: 已运行"
 [ "$RUN_EXAMPLES" = true ] && echo "  示例程序: 已运行"
+[ "$RUN_SMOKE" = true ] && echo "  find_package 烟雾测试: 已运行"
 echo ""
 print_success "完成！"

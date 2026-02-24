@@ -1,7 +1,13 @@
 @PACKAGE_INIT@
 
+set(XSWL_YOUDIDIT_DEPS_MODE "@XSWL_YOUDIDIT_DEPS_MODE@")
+
 include(CMakeFindDependencyMacro)
 find_dependency(Threads)
+
+if(XSWL_YOUDIDIT_DEPS_MODE STREQUAL "system")
+	message(STATUS "xswl-youdidit package was built in system deps mode; ensure tl/xswl_signals headers are available to the consumer.")
+endif()
 
 include("${CMAKE_CURRENT_LIST_DIR}/xswl-youdidit-targets.cmake")
 check_required_components(xswl-youdidit)

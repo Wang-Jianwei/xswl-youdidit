@@ -53,6 +53,9 @@
 # 构建并运行示例
 ./build_and_test.sh --examples
 
+# 运行安装后 find_package 烟雾测试
+./build_and_test.sh --smoke
+
 # 自定义并行编译数
 ./build_and_test.sh -j 8
 ```
@@ -74,8 +77,9 @@
 | `--unit` | 仅运行单元测试 | 快速检查核心功能 |
 | `--integration` | 仅运行集成测试 | 检查模块协作 |
 | `--examples` | 构建并运行示例 | 演示具体用法 |
+| `--smoke` | 运行安装后 find_package 烟雾测试 | 验证导出包可被外部工程消费 |
 | `--all` | 运行所有测试与示例 | 完整验证 |
-| `-j N` | 指定并行编译数 | 默认为 `$(nproc)` |
+| `-j N` | 指定并行编译数 | 默认为自动检测值 |
 
 ### 常见用场景
 
@@ -88,6 +92,27 @@ git submodule update --init --recursive
 # 完整构建与验证
 ./build_and_test.sh --clean --all
 ```
+
+#### 场景 1.1：依赖冲突规避（宿主工程已有同名第三方库）
+
+```bash
+# 自动模式：优先复用外部依赖，失败回退 third_party（推荐）
+cmake -S . -B build -DXSWL_YOUDIDIT_DEPS_MODE=auto
+
+# 强制 vendored：离线环境推荐
+cmake -S . -B build -DXSWL_YOUDIDIT_DEPS_MODE=vendor
+
+# 强制 system：由上层工程统一管理依赖
+cmake -S . -B build \
+  -DXSWL_YOUDIDIT_DEPS_MODE=system \
+  -DXSWL_YOUDIDIT_TL_OPTIONAL_INCLUDE_DIR=/path/to/includes \
+  -DXSWL_YOUDIDIT_TL_EXPECTED_INCLUDE_DIR=/path/to/includes \
+  -DXSWL_YOUDIDIT_SIGNALS_INCLUDE_DIR=/path/to/includes \
+  -DXSWL_YOUDIDIT_NLOHMANN_INCLUDE_DIR=/path/to/includes \
+  -DXSWL_YOUDIDIT_HTTPLIB_INCLUDE_DIR=/path/to/includes
+```
+
+说明：`auto`/`vendor` 可直接支持离线构建；`system` 模式下若缺失 include 配置会在 CMake 配置阶段直接报错。
 
 #### 场景 2：快速验证修改（开发流程）
 
@@ -108,6 +133,9 @@ git submodule update --init --recursive
 ```bash
 # 仅测试单元测试
 ./build_and_test.sh --unit
+
+# 验证安装后 find_package 集成
+./build_and_test.sh --smoke
 
 # 运行后查看详细报告
 python3 analyze_tests.py build

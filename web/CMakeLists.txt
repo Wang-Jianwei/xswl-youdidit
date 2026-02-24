@@ -16,6 +16,7 @@ if(WEB_SOURCES)
     else()
         target_link_libraries(youdidit_web PUBLIC youdidit Threads::Threads)
     endif()
+    target_link_libraries(youdidit_web PRIVATE xswl_youdidit_deps)
 endif()
 
 # 可选构建：示例与测试

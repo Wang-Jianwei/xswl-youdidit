@@ -15,24 +15,17 @@ else()
     add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
-# 第三方依赖
-include_directories(${CMAKE_SOURCE_DIR}/third_party)
-include_directories(${CMAKE_SOURCE_DIR}/third_party/tl_optional/include)
-include_directories(${CMAKE_SOURCE_DIR}/third_party/tl_expected/include)
-include_directories(${CMAKE_SOURCE_DIR}/third_party/xswl_signals/include)
-include_directories(${CMAKE_SOURCE_DIR}/third_party/nlohmann)
-
 # 线程库（跨平台）
 find_package(Threads REQUIRED)
+
+include(${CMAKE_CURRENT_SOURCE_DIR}/cmake/Dependencies.cmake)
+
+option(XSWL_YOUDIDIT_INSTALL_VENDORED_DEPS "Install bundled third-party public headers required by xswl-youdidit public API" ON)
 
 # 可配置的可执行文件前缀（将写入构建目录的 easy_executable_prefix.txt，供脚本读取）
 set(EASY_EXECUTABLE_PREFIX "easy-" CACHE STRING "Prefix added to executable output names (set empty to disable)")
 # 将前缀写入到构建目录（每次 configure 时更新），脚本会读取此文件来找到正确的可执行文件名
 file(WRITE "${CMAKE_BINARY_DIR}/executable_prefix.txt" "${EASY_EXECUTABLE_PREFIX}")
-
-
-# 项目头文件
-include_directories(${CMAKE_SOURCE_DIR}/include)
 
 # 添加子目录
 add_subdirectory(src)
@@ -65,9 +58,20 @@ install(TARGETS youdidit
 )
 
 install(DIRECTORY include/xswl DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(DIRECTORY third_party/tl_optional/include/tl DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(DIRECTORY third_party/tl_expected/include/tl DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
-install(DIRECTORY third_party/xswl_signals/include/xswl DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+
+if(XSWL_YOUDIDIT_INSTALL_VENDORED_DEPS)
+    if(XSWL_YOUDIDIT_USE_VENDORED_TL_OPTIONAL)
+        install(FILES third_party/tl_optional/include/tl/optional.hpp DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tl)
+    endif()
+
+    if(XSWL_YOUDIDIT_USE_VENDORED_TL_EXPECTED)
+        install(FILES third_party/tl_expected/include/tl/expected.hpp DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/tl)
+    endif()
+
+    if(XSWL_YOUDIDIT_USE_VENDORED_SIGNALS)
+        install(FILES third_party/xswl_signals/include/xswl/signals.hpp DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/xswl)
+    endif()
+endif()
 
 install(EXPORT xswl-youdidit-targets
     FILE xswl-youdidit-targets.cmake
@@ -79,6 +83,7 @@ configure_package_config_file(
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/xswl-youdidit-config.cmake.in
     ${CMAKE_CURRENT_BINARY_DIR}/xswl-youdidit-config.cmake
     INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/xswl-youdidit
+    PATH_VARS CMAKE_INSTALL_INCLUDEDIR
 )
 
 write_basic_package_version_file(

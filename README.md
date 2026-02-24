@@ -85,6 +85,38 @@ cd xswl-youdidit
 git submodule update --init --recursive  # 初始化子模块（下载 xswl-signals）
 ```
 
+### 第三方依赖模式（避免与宿主工程重复）
+
+本库支持三种依赖来源模式，通过 `-DXSWL_YOUDIDIT_DEPS_MODE=` 选择：
+
+- `auto`（默认）：优先复用宿主已提供的目标/包含路径，找不到时回退到 `third_party`（支持离线）
+- `system`：仅使用外部依赖，不回退 vendored（适合集成方统一依赖管理）
+- `vendor`：强制使用仓库内 `third_party`（最稳妥的离线构建）
+
+常用示例：
+
+```bash
+# 默认 auto（可离线回退）
+cmake -S . -B build -DXSWL_YOUDIDIT_DEPS_MODE=auto
+
+# 强制离线 vendored
+cmake -S . -B build -DXSWL_YOUDIDIT_DEPS_MODE=vendor
+
+# 强制系统依赖（需显式提供 include 目录）
+cmake -S . -B build \
+    -DXSWL_YOUDIDIT_DEPS_MODE=system \
+    -DXSWL_YOUDIDIT_TL_OPTIONAL_INCLUDE_DIR=/path/to/includes \
+    -DXSWL_YOUDIDIT_TL_EXPECTED_INCLUDE_DIR=/path/to/includes \
+    -DXSWL_YOUDIDIT_SIGNALS_INCLUDE_DIR=/path/to/includes \
+    -DXSWL_YOUDIDIT_NLOHMANN_INCLUDE_DIR=/path/to/includes \
+    -DXSWL_YOUDIDIT_HTTPLIB_INCLUDE_DIR=/path/to/includes
+```
+
+可选安装策略：
+
+- `-DXSWL_YOUDIDIT_INSTALL_VENDORED_DEPS=ON`（默认）安装本库公共 API 必需的 vendored 头文件
+- 设为 `OFF` 时安装包更精简，但消费端需自行提供对应第三方头
+
 ### 使用构建脚本（推荐）
 
 项目提供了便捷的构建测试脚本：
@@ -106,6 +138,7 @@ git submodule update --init --recursive  # 初始化子模块（下载 xswl-sign
 - `--unit` - 仅运行单元测试
 - `--integration` - 仅运行集成测试
 - `--examples` - 构建并运行示例程序
+- `--smoke` - 运行安装后 `find_package` 集成烟雾测试
 - `--all` - 运行所有测试与示例
 - `-j N` - 指定并行构建数（默认为 CPU 核心数）
 
@@ -116,6 +149,9 @@ git submodule update --init --recursive  # 初始化子模块（下载 xswl-sign
 
 # 仅运行单元测试
 ./build_and_test.sh --unit
+
+# 仅运行 find_package 集成烟雾测试
+./build_and_test.sh --smoke
 
 # 使用 4 个线程编译
 ./build_and_test.sh -j 4
@@ -153,6 +189,9 @@ python3 analyze_tests.py [构建目录]
 
 # 仅构建并运行示例
 .\build_and_test.ps1 -Examples
+
+# 仅运行 find_package 集成烟雾测试
+.\build_and_test.ps1 -Smoke
 
 # 指定并行数
 .\build_and_test.ps1 -J 4

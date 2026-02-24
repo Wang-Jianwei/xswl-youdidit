@@ -100,3 +100,25 @@ add_executable(integration_test_workflow integration/test_workflow.cpp)
 set_target_properties(integration_test_workflow PROPERTIES OUTPUT_NAME "${EASY_EXECUTABLE_PREFIX}integration_test_workflow")
 target_link_libraries(integration_test_workflow youdidit Threads::Threads)
 add_test(NAME integration_workflow COMMAND $<TARGET_FILE:integration_test_workflow>)
+
+option(XSWL_YOUDIDIT_ENABLE_FIND_PACKAGE_SMOKE "Enable smoke test for installed package find_package integration" ON)
+if(XSWL_YOUDIDIT_ENABLE_FIND_PACKAGE_SMOKE)
+	set(_smoke_build_type "")
+	if(DEFINED CMAKE_BUILD_TYPE)
+		set(_smoke_build_type "${CMAKE_BUILD_TYPE}")
+	endif()
+
+	add_test(
+		NAME integration_find_package_smoke
+		COMMAND ${CMAKE_COMMAND}
+			-DROOT_BUILD_DIR=${CMAKE_BINARY_DIR}
+			-DSMOKE_SOURCE_DIR=${CMAKE_SOURCE_DIR}/tests/smoke/find_package_consumer
+			-DSMOKE_BUILD_DIR=${CMAKE_BINARY_DIR}/tests/find_package_consumer_build
+			-DSMOKE_INSTALL_PREFIX=${CMAKE_BINARY_DIR}/tests/find_package_consumer_install
+			-DSMOKE_GENERATOR=${CMAKE_GENERATOR}
+			-DSMOKE_MAKE_PROGRAM=${CMAKE_MAKE_PROGRAM}
+			-DSMOKE_BUILD_TYPE=${_smoke_build_type}
+			-DSMOKE_CONFIG=$<CONFIG>
+			-P ${CMAKE_SOURCE_DIR}/cmake/RunFindPackageSmoke.cmake
+	)
+endif()

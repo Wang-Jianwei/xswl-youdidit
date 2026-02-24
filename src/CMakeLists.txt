@@ -9,10 +9,7 @@ target_compile_features(youdidit PUBLIC cxx_std_11)
 
 target_include_directories(youdidit PUBLIC
     $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/third_party/tl_optional/include>
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/third_party/tl_expected/include>
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/third_party/xswl_signals/include>
     $<INSTALL_INTERFACE:include>
 )
 
-target_link_libraries(youdidit PUBLIC Threads::Threads)
+target_link_libraries(youdidit PUBLIC Threads::Threads $<BUILD_INTERFACE:xswl_youdidit_deps>)
