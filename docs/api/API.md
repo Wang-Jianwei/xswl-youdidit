@@ -699,8 +699,8 @@ public:
     
     // ========== 任务管理 ==========
     
-    TaskId publish_task(const std::shared_ptr<Task> &task);  // 线程安全
-    TaskId create_and_publish_task(const std::function<void(TaskBuilder &)> &configurator);
+    tl::expected<TaskId, Error> publish_task(const std::shared_ptr<Task> &task);  // 线程安全
+    tl::expected<TaskId, Error> create_and_publish_task(const std::function<void(TaskBuilder &)> &configurator);
     
     std::shared_ptr<Task> get_task(const TaskId &task_id) const;  // 线程安全
     bool has_task(const TaskId &task_id) const;

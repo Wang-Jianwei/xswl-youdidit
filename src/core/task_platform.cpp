@@ -102,35 +102,37 @@ size_t TaskPlatform::max_task_queue_size() const noexcept {
 }
 
 // ========== 任务管理 ==========
-TaskId TaskPlatform::publish_task(const std::shared_ptr<Task> &task) {
+tl::expected<TaskId, Error> TaskPlatform::publish_task(const std::shared_ptr<Task> &task) {
     if (!task) {
-        return "";
+        return tl::make_unexpected(Error("Task is null", ErrorCode::TASK_NOT_FOUND));
     }
 
     {
         std::lock_guard<std::mutex> lock(d->tasks_mutex_);
         if (d->max_queue_size_ > 0 && d->tasks_.size() >= d->max_queue_size_) {
-            return "";
+            return tl::make_unexpected(Error("Platform task queue is full", ErrorCode::PLATFORM_QUEUE_FULL));
         }
         d->tasks_[task->id()] = task;
     }
 
     // 确保状态为 Published
     if (task->status() == TaskStatus::Draft) {
-        task->set_status(TaskStatus::Published);
-        task->set_published_at(std::chrono::system_clock::now());
+        auto publish_result = task->publish();
+        if (!publish_result.has_value()) {
+            return tl::make_unexpected(publish_result.error());
+        }
     }
 
     emit sig_task_published(task);
     return task->id();
 }
 
-TaskId TaskPlatform::create_and_publish_task(const std::function<void(TaskBuilder &)> &configurator) {
+tl::expected<TaskId, Error> TaskPlatform::create_and_publish_task(const std::function<void(TaskBuilder &)> &configurator) {
     TaskBuilder builder(this);
     configurator(builder);
     auto task = builder.build_and_publish();
     if (!task) {
-        return "";
+        return tl::make_unexpected(Error("Failed to build task", ErrorCode::TASK_STATUS_INVALID));
     }
     return publish_task(task);
 }
@@ -152,23 +154,27 @@ bool TaskPlatform::has_task(const TaskId &task_id) const {
 bool TaskPlatform::_delete_task_internal(const TaskId &task_id, bool force) {
     std::shared_ptr<Task> task;
     std::string claimer_id;
-    bool had_claimer = false;
+    bool has_active_claimer = false;
     {
         std::lock_guard<std::mutex> lock(d->tasks_mutex_);
         auto it = d->tasks_.find(task_id);
         if (it == d->tasks_.end()) return false;
         task = it->second;
         claimer_id = task->claimer_id();
-        had_claimer = !claimer_id.empty();
-        if (!force && had_claimer) {
-            // 不允许删除仍被申领的任务
+        TaskStatus current_status = task->status();
+        has_active_claimer = !claimer_id.empty() &&
+                             (current_status == TaskStatus::Claimed ||
+                              current_status == TaskStatus::Processing ||
+                              current_status == TaskStatus::Paused);
+        if (!force && has_active_claimer) {
+            // 不允许删除仍处于活动态的已申领任务
             return false;
         }
         d->tasks_.erase(it);
     }
 
     // 如果是强制删除且任务之前被某个 Claimer 申领，尝试通知 Claimer 进行清理
-    if (force && had_claimer) {
+    if (force && has_active_claimer) {
         std::shared_ptr<Claimer> claimer;
         {
             std::lock_guard<std::mutex> lock(d->claimers_mutex_);
@@ -201,7 +207,10 @@ bool TaskPlatform::cancel_task(const TaskId &task_id) {
     TaskStatus current = task->status();
     if (current == TaskStatus::Published) {
         // 尚未申领，可以直接取消
-        task->set_status(TaskStatus::Cancelled);
+        auto cancel_result = task->cancel();
+        if (!cancel_result.has_value()) {
+            return false;
+        }
         emit sig_task_cancelled(task);
         return true;
     }
@@ -214,6 +223,10 @@ bool TaskPlatform::cancel_task(const TaskId &task_id) {
 }
 
 void TaskPlatform::clear_tasks_by_status(TaskStatus status, bool only_auto_clean) {
+    if (status == TaskStatus::Claimed || status == TaskStatus::Processing || status == TaskStatus::Paused) {
+        return;
+    }
+
     std::vector<std::shared_ptr<Task>> deleted;
     {
         std::lock_guard<std::mutex> lock(d->tasks_mutex_);
@@ -221,11 +234,6 @@ void TaskPlatform::clear_tasks_by_status(TaskStatus status, bool only_auto_clean
             const auto &task = it->second;
             if (task->status() == status) {
                 if (only_auto_clean && !task->auto_cleanup()) {
-                    ++it;
-                    continue;
-                }
-                // 不删除仍被申领的任务（以避免破坏申领者状态）
-                if (!task->claimer_id().empty()) {
                     ++it;
                     continue;
                 }
@@ -526,8 +534,7 @@ TaskPlatform::PlatformStatistics TaskPlatform::get_statistics() const {
     PlatformStatistics stats{};
     stats.start_time = d->start_time_;
 
-    std::lock_guard<std::mutex> lock_tasks(d->tasks_mutex_);
-    stats.total_tasks = d->tasks_.size();
+    stats.total_tasks = 0;
     stats.published_tasks = 0;
     stats.claimed_tasks = 0;
     stats.processing_tasks = 0;
@@ -535,21 +542,28 @@ TaskPlatform::PlatformStatistics TaskPlatform::get_statistics() const {
     stats.failed_tasks = 0;
     stats.abandoned_tasks = 0;
 
-    for (const auto &pair : d->tasks_) {
-        auto status = pair.second->status();
-        switch (status) {
-            case TaskStatus::Published: stats.published_tasks++; break;
-            case TaskStatus::Claimed: stats.claimed_tasks++; break;
-            case TaskStatus::Processing: stats.processing_tasks++; break;
-            case TaskStatus::Completed: stats.completed_tasks++; break;
-            case TaskStatus::Failed: stats.failed_tasks++; break;
-            case TaskStatus::Abandoned: stats.abandoned_tasks++; break;
-            default: break;
+    {
+        std::lock_guard<std::mutex> lock_tasks(d->tasks_mutex_);
+        stats.total_tasks = d->tasks_.size();
+
+        for (const auto &pair : d->tasks_) {
+            auto status = pair.second->status();
+            switch (status) {
+                case TaskStatus::Published: stats.published_tasks++; break;
+                case TaskStatus::Claimed: stats.claimed_tasks++; break;
+                case TaskStatus::Processing: stats.processing_tasks++; break;
+                case TaskStatus::Completed: stats.completed_tasks++; break;
+                case TaskStatus::Failed: stats.failed_tasks++; break;
+                case TaskStatus::Abandoned: stats.abandoned_tasks++; break;
+                default: break;
+            }
         }
     }
 
-    std::lock_guard<std::mutex> lock_claimers(d->claimers_mutex_);
-    stats.total_claimers = d->claimers_.size();
+    {
+        std::lock_guard<std::mutex> lock_claimers(d->claimers_mutex_);
+        stats.total_claimers = d->claimers_.size();
+    }
 
     return stats;
 }

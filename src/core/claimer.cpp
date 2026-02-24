@@ -468,12 +468,11 @@ tl::expected<void, Error> Claimer::pause_task(const TaskId &task_id) {
     
     auto task = task_opt.value();
     
-    if (task->status() != TaskStatus::Processing) {
-        return tl::make_unexpected(Error("Task is not processing", 
-                                         ErrorCode::TASK_STATUS_INVALID));
+    auto pause_result = task->pause();
+    if (!pause_result.has_value()) {
+        return tl::make_unexpected(pause_result.error());
     }
-    
-    task->set_status(TaskStatus::Paused);
+
     return {};
 }
 
@@ -485,12 +484,11 @@ tl::expected<void, Error> Claimer::resume_task(const TaskId &task_id) {
     
     auto task = task_opt.value();
     
-    if (task->status() != TaskStatus::Paused) {
-        return tl::make_unexpected(Error("Task is not paused", 
-                                         ErrorCode::TASK_STATUS_INVALID));
+    auto resume_result = task->resume();
+    if (!resume_result.has_value()) {
+        return tl::make_unexpected(resume_result.error());
     }
-    
-    task->set_status(TaskStatus::Processing);
+
     return {};
 }
 

@@ -1,6 +1,7 @@
 #include <xswl/youdidit/core/task_platform.hpp>
 #include <cassert>
 #include <iostream>
+#include <functional>
 
 using namespace xswl::youdidit;
 
@@ -47,7 +48,8 @@ void test_publish_and_get_task() {
                     .priority(60)
                     .handler([](Task&, const std::string&) { return TaskResult("ok"); })
                     .build_and_publish();
-    platform.publish_task(task);
+    auto publish_result = platform.publish_task(task);
+    assert_true(publish_result.has_value(), "Publish should succeed");
 
     assert_true(platform.has_task(task->id()), "Platform should contain task");
     auto fetched = platform.get_task(task->id());
@@ -70,7 +72,8 @@ void test_register_and_claim_by_id() {
                     .priority(50)
                     .handler([](Task&, const std::string&) { return TaskResult("done"); })
                     .build_and_publish();
-    platform->publish_task(task);
+    auto publish_result = platform->publish_task(task);
+    assert_true(publish_result.has_value(), "Publish should succeed");
 
     auto result = claimer->claim_task(task->id());
     assert_true(result.has_value(), "Claim should succeed");
@@ -99,8 +102,8 @@ void test_claim_next_task_priority() {
                     .category("general")
                     .handler([](Task&, const std::string&) { return TaskResult("high"); })
                     .build_and_publish();
-    platform->publish_task(low);
-    platform->publish_task(high);
+    assert_true(platform->publish_task(low).has_value(), "Publish low should succeed");
+    assert_true(platform->publish_task(high).has_value(), "Publish high should succeed");
 
     auto result = claimer->claim_next_task();
     assert_true(result.has_value(), "Should claim a task");
@@ -129,8 +132,8 @@ void test_claim_matching_task() {
                          .category("frontend")
                          .handler([](Task&, const std::string&) { return TaskResult("frontend"); })
                          .build_and_publish();
-    platform->publish_task(backend);
-    platform->publish_task(frontend);
+    assert_true(platform->publish_task(backend).has_value(), "Publish backend should succeed");
+    assert_true(platform->publish_task(frontend).has_value(), "Publish frontend should succeed");
 
     auto result = claimer->claim_matching_task();
     assert_true(result.has_value(), "Should claim a task");
@@ -201,7 +204,7 @@ void test_statistics() {
                     .priority(70)
                     .handler([](Task&, const std::string&) { return TaskResult("data"); })
                     .build_and_publish();
-    platform->publish_task(task);
+    assert_true(platform->publish_task(task).has_value(), "Publish should succeed");
 
     // Claim and complete
     claimer->claim_task(task->id());
@@ -222,7 +225,7 @@ void test_cancel_published_task() {
                     .priority(50)
                     .handler([](Task&, const std::string&) { return TaskResult("ok"); })
                     .build_and_publish();
-    platform.publish_task(task);
+    assert_true(platform.publish_task(task).has_value(), "Publish should succeed");
 
     bool cancelled_signal = false;
     platform.sig_task_cancelled.connect([&](const std::shared_ptr<Task> &) {
@@ -244,7 +247,7 @@ void test_cancel_processing_task_emits_request_signal() {
                     .priority(60)
                     .handler([](Task&, const std::string&) { return TaskResult("ok"); })
                     .build_and_publish();
-    platform.publish_task(task);
+    assert_true(platform.publish_task(task).has_value(), "Publish should succeed");
 
     // Simulate it being in processing state
     task->set_status(TaskStatus::Claimed);
@@ -252,10 +255,12 @@ void test_cancel_processing_task_emits_request_signal() {
 
     bool request_signal = false;
     std::string received_reason;
-    platform.sig_task_cancel_requested.connect([&](const std::shared_ptr<Task> &, const std::string &reason) {
-        request_signal = true;
-        received_reason = reason;
-    });
+    std::function<void(const std::shared_ptr<Task>&, const std::string&)> on_cancel_requested =
+        [&](const std::shared_ptr<Task> &, const std::string &reason) {
+            request_signal = true;
+            received_reason = reason;
+        };
+    platform.sig_task_cancel_requested.connect(on_cancel_requested);
 
     bool res = platform.cancel_task(task->id());
     assert_true(res, "cancel_task should return true");
@@ -282,8 +287,8 @@ void test_clear_completed_tasks_behaviour() {
                   .title("C2")
                   .handler([](Task&, const std::string&){ return TaskResult("ok"); })
                   .build_and_publish();
-    platform.publish_task(t1);
-    platform.publish_task(t2);
+    assert_true(platform.publish_task(t1).has_value(), "Publish t1 should succeed");
+    assert_true(platform.publish_task(t2).has_value(), "Publish t2 should succeed");
 
     // mark both as completed via valid transitions
     t1->set_status(TaskStatus::Claimed);
@@ -316,6 +321,63 @@ void test_clear_completed_tasks_behaviour() {
     std::cout << "PASSED" << std::endl;
 }
 
+void test_publish_task_error_paths() {
+    std::cout << "Test 12: Publish task error paths... ";
+    TaskPlatform platform;
+
+    auto null_result = platform.publish_task(nullptr);
+    assert_true(!null_result.has_value(), "Publishing nullptr should fail");
+    assert_true(null_result.error().code == ErrorCode::TASK_NOT_FOUND,
+                "Publishing nullptr should return TASK_NOT_FOUND");
+
+    platform.set_max_task_queue_size(1);
+    auto t1 = platform.task_builder()
+                 .title("Q1")
+                 .handler([](Task&, const std::string&){ return TaskResult("ok"); })
+                 .build_and_publish();
+    auto t2 = platform.task_builder()
+                 .title("Q2")
+                 .handler([](Task&, const std::string&){ return TaskResult("ok"); })
+                 .build_and_publish();
+
+    assert_true(platform.publish_task(t1).has_value(), "First task should be published");
+    auto full_result = platform.publish_task(t2);
+    assert_true(!full_result.has_value(), "Queue overflow publish should fail");
+    assert_true(full_result.error().code == ErrorCode::PLATFORM_QUEUE_FULL,
+                "Queue overflow should return PLATFORM_QUEUE_FULL");
+
+    std::cout << "PASSED" << std::endl;
+}
+
+void test_clear_completed_task_with_retained_claimer_id() {
+    std::cout << "Test 13: Clear completed task with retained claimer id... ";
+    auto platform = std::make_shared<TaskPlatform>();
+    auto claimer = std::make_shared<Claimer>("claimer-clean", "Cleaner");
+    claimer->add_category("ops");
+    platform->register_claimer(claimer);
+
+    auto task = platform->task_builder()
+                    .title("Cleanup Completed")
+                    .category("ops")
+                    .handler([](Task&, const std::string&) { return TaskResult("done"); })
+                    .build_and_publish();
+    assert_true(platform->publish_task(task).has_value(), "Publish should succeed");
+
+    auto claim_result = claimer->claim_task(task->id());
+    assert_true(claim_result.has_value(), "Claim should succeed");
+
+    auto complete_result = claimer->complete_task(task->id(), TaskResult("done"));
+    assert_true(complete_result.has_value(), "Complete should succeed");
+    assert_true(!task->claimer_id().empty(), "Claimer id should be retained for audit");
+
+    task->set_auto_cleanup(true);
+    platform->clear_completed_tasks(true);
+
+    assert_true(!platform->has_task(task->id()),
+                "Completed task should be clearable even when claimer_id is retained");
+    std::cout << "PASSED" << std::endl;
+}
+
 // ========== 主函数 ==========
 int main() {
     std::cout << "Running TaskPlatform unit tests..." << std::endl;
@@ -332,6 +394,8 @@ int main() {
     test_cancel_published_task();
     test_cancel_processing_task_emits_request_signal();
     test_clear_completed_tasks_behaviour();
+    test_publish_task_error_paths();
+    test_clear_completed_task_with_retained_claimer_id();
 
     std::cout << "================================" << std::endl;
     std::cout << "All tests passed!" << std::endl;

@@ -196,18 +196,10 @@ std::shared_ptr<Task> TaskBuilder::build_and_publish() {
         return nullptr;
     }
     
-    // 如果有平台，发布任务
-    if (d->platform_) {
-        // 设置为 Published 状态
-        task->set_status(TaskStatus::Published);
-        task->set_published_at(std::chrono::system_clock::now());
-        
-        // 注意：实际的平台注册会在 TaskPlatform 类中实现
-        // 这里只设置状态和时间戳
-    } else {
-        // 没有平台，只设置为 Published 状态
-        task->set_status(TaskStatus::Published);
-        task->set_published_at(std::chrono::system_clock::now());
+    // 统一通过语义化 API 发布（内部完成状态与时间戳）
+    auto publish_result = task->publish();
+    if (!publish_result.has_value()) {
+        return nullptr;
     }
     
     return task;

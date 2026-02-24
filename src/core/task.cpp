@@ -203,19 +203,58 @@ Task &Task::set_priority(int priority) {
 }
 
 Task &Task::set_status(TaskStatus new_status) {
-    TaskStatus old_status = d->status_.load(std::memory_order_acquire);
-    
-    if (old_status == new_status) {
-        return *this;
+    while (true) {
+        TaskStatus old_status = d->status_.load(std::memory_order_acquire);
+
+        if (old_status == new_status) {
+            return *this;
+        }
+
+        bool allowed = false;
+        switch (old_status) {
+            case TaskStatus::Draft:
+                allowed = (new_status == TaskStatus::Published);
+                break;
+            case TaskStatus::Published:
+                allowed = (new_status == TaskStatus::Claimed || new_status == TaskStatus::Cancelled);
+                break;
+            case TaskStatus::Claimed:
+                allowed = (new_status == TaskStatus::Processing || new_status == TaskStatus::Abandoned);
+                break;
+            case TaskStatus::Processing:
+                allowed = (new_status == TaskStatus::Paused ||
+                           new_status == TaskStatus::Completed ||
+                           new_status == TaskStatus::Failed);
+                break;
+            case TaskStatus::Paused:
+                allowed = (new_status == TaskStatus::Processing || new_status == TaskStatus::Abandoned);
+                break;
+            case TaskStatus::Failed:
+                allowed = (new_status == TaskStatus::Published || new_status == TaskStatus::Abandoned);
+                break;
+            case TaskStatus::Abandoned:
+                allowed = (new_status == TaskStatus::Published);
+                break;
+            case TaskStatus::Completed:
+            case TaskStatus::Cancelled:
+            default:
+                allowed = false;
+                break;
+        }
+
+        if (!allowed) {
+            return *this;
+        }
+
+        TaskStatus expected = old_status;
+        if (d->status_.compare_exchange_strong(expected, new_status,
+                                               std::memory_order_acq_rel,
+                                               std::memory_order_acquire)) {
+            _trigger_status_signal(old_status, new_status);
+            return *this;
+        }
     }
-    
-    if (!can_transition_to(new_status)) {
-        return *this; // 静默失败，不改变状态
-    }
-    
-    d->status_.store(new_status, std::memory_order_release);
-    _trigger_status_signal(old_status, new_status);
-    
+
     return *this;
 }
 
@@ -375,9 +414,10 @@ TaskResult Task::execute(const std::string &input) {
 
     // 设置为处理中状态
     if (current_status == TaskStatus::Claimed) {
-        set_status(TaskStatus::Processing);
-        set_started_at(std::chrono::system_clock::now());
-        emit sig_started(*this);
+        auto start_result = start();
+        if (!start_result.has_value()) {
+            return start_result.error();
+        }
     }
 
     // 执行任务处理函数
@@ -386,15 +426,17 @@ TaskResult Task::execute(const std::string &input) {
     if (result.ok()) {
         // 成功
         TaskResult task_result = result;
-        set_status(TaskStatus::Completed);
-        set_progress(100);
-        set_completed_at(std::chrono::system_clock::now());
-        emit sig_completed(*this, task_result);
+        auto complete_result = complete(task_result);
+        if (!complete_result.has_value() && status() != TaskStatus::Completed) {
+            return complete_result.error();
+        }
         return task_result;
     } else {
         // 失败
-        set_status(TaskStatus::Failed);
-        emit sig_failed(*this, result.error);
+        auto fail_result = fail(result.error.message);
+        if (!fail_result.has_value() && status() != TaskStatus::Failed) {
+            return fail_result.error();
+        }
         return result.error;
     }
 }

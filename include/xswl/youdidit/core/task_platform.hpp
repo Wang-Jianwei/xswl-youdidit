@@ -35,8 +35,8 @@ public:
     size_t max_task_queue_size() const noexcept;
 
     // ========== 任务管理 ==========
-    TaskId publish_task(const std::shared_ptr<Task> &task);
-    TaskId create_and_publish_task(const std::function<void(TaskBuilder &)> &configurator);
+    tl::expected<TaskId, Error> publish_task(const std::shared_ptr<Task> &task);
+    tl::expected<TaskId, Error> create_and_publish_task(const std::function<void(TaskBuilder &)> &configurator);
 
     std::shared_ptr<Task> get_task(const TaskId &task_id) const;
     bool has_task(const TaskId &task_id) const;
