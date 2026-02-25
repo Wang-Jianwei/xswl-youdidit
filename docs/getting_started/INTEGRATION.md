@@ -27,6 +27,15 @@ set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 # 假设把本库放在 third_party/xswl-youdidit
+# 如果你希望关闭可选子模块，可先设置下面这些变量：
+#   - XSWL_YOUDIDIT_BUILD_WEB    OFF
+#   - XSWL_YOUDIDIT_BUILD_TESTS  OFF
+#   - XSWL_YOUDIDIT_BUILD_EXAMPLES OFF
+# 请在 add_subdirectory 之前设置，以便选项生效。
+set(XSWL_YOUDIDIT_BUILD_WEB    OFF CACHE BOOL "" FORCE)
+set(XSWL_YOUDIDIT_BUILD_TESTS  OFF CACHE BOOL "" FORCE)
+set(XSWL_YOUDIDIT_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+
 add_subdirectory(third_party/xswl-youdidit)
 
 add_executable(my_app main.cpp)

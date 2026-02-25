@@ -31,21 +31,21 @@ file(WRITE "${CMAKE_BINARY_DIR}/executable_prefix.txt" "${EASY_EXECUTABLE_PREFIX
 add_subdirectory(src)
 
 # Web 子工程（可选）
-option(BUILD_WEB "Build web module" ON)
-if(BUILD_WEB)
+option(XSWL_YOUDIDIT_BUILD_WEB "Build web module" ON)
+if(XSWL_YOUDIDIT_BUILD_WEB)
     add_subdirectory(web)
 endif()
 
 # 测试
-option(BUILD_TESTS "Build tests" ON)
-if(BUILD_TESTS)
+option(XSWL_YOUDIDIT_BUILD_TESTS "Build tests" ON)
+if(XSWL_YOUDIDIT_BUILD_TESTS)
     enable_testing()
     add_subdirectory(tests)
 endif()
 
 # 示例
-option(BUILD_EXAMPLES "Build examples" ON)
-if(BUILD_EXAMPLES)
+option(XSWL_YOUDIDIT_BUILD_EXAMPLES "Build examples" ON)
+if(XSWL_YOUDIDIT_BUILD_EXAMPLES)
     add_subdirectory(examples)
 endif()
 
