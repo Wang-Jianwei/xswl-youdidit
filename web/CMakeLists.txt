@@ -1,11 +1,11 @@
 # Web 子工程
-file(GLOB_RECURSE WEB_SOURCES ${CMAKE_SOURCE_DIR}/web/src/*.cpp)
+file(GLOB_RECURSE WEB_SOURCES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cpp)
 
 if(WEB_SOURCES)
     add_library(youdidit_web ${WEB_SOURCES})
     target_include_directories(youdidit_web PUBLIC
-        ${CMAKE_SOURCE_DIR}/include
-        ${CMAKE_SOURCE_DIR}/web/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/../include
+        ${CMAKE_CURRENT_SOURCE_DIR}/include
     )
     # Ensure Windows 10+ for cpp-httplib when building on Windows
     if(WIN32)

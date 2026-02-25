@@ -13,7 +13,7 @@ add_library(xswl::youdidit ALIAS youdidit)
 target_compile_features(youdidit PUBLIC cxx_std_11)
 
 target_include_directories(youdidit PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../include>
     $<INSTALL_INTERFACE:include>
 )
 

@@ -103,23 +103,23 @@ else()
 endif()
 
 if(_xswl_vendor_tl_optional)
-    target_include_directories(xswl_youdidit_deps INTERFACE "${CMAKE_SOURCE_DIR}/third_party/tl_optional/include")
+    target_include_directories(xswl_youdidit_deps INTERFACE "${CMAKE_CURRENT_LIST_DIR}/../third_party/tl_optional/include")
 endif()
 
 if(_xswl_vendor_tl_expected)
-    target_include_directories(xswl_youdidit_deps INTERFACE "${CMAKE_SOURCE_DIR}/third_party/tl_expected/include")
+    target_include_directories(xswl_youdidit_deps INTERFACE "${CMAKE_CURRENT_LIST_DIR}/../third_party/tl_expected/include")
 endif()
 
 if(_xswl_vendor_signals)
-    target_include_directories(xswl_youdidit_deps INTERFACE "${CMAKE_SOURCE_DIR}/third_party/xswl_signals/include")
+    target_include_directories(xswl_youdidit_deps INTERFACE "${CMAKE_CURRENT_LIST_DIR}/../third_party/xswl_signals/include")
 endif()
 
 if(_xswl_vendor_nlohmann)
-    target_include_directories(xswl_youdidit_deps INTERFACE "${CMAKE_SOURCE_DIR}/third_party")
+    target_include_directories(xswl_youdidit_deps INTERFACE "${CMAKE_CURRENT_LIST_DIR}/../third_party")
 endif()
 
 if(_xswl_vendor_httplib)
-    target_include_directories(xswl_youdidit_deps INTERFACE "${CMAKE_SOURCE_DIR}/third_party")
+    target_include_directories(xswl_youdidit_deps INTERFACE "${CMAKE_CURRENT_LIST_DIR}/../third_party")
 endif()
 
 set(XSWL_YOUDIDIT_USE_VENDORED_TL_OPTIONAL ${_xswl_vendor_tl_optional} CACHE INTERNAL "Using vendored tl_optional" FORCE)
