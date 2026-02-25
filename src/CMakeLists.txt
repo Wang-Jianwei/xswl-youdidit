@@ -1,5 +1,10 @@
 # 核心源文件
-file(GLOB_RECURSE CORE_SOURCES CONFIGURE_DEPENDS core/*.cpp)
+if(CMAKE_GENERATOR STREQUAL "MinGW Makefiles" AND CMAKE_VERSION VERSION_GREATER_EQUAL "4.2")
+    message(WARNING "CMake 4.2 + MinGW Makefiles has VerifyGlobs.cmake issues; disabling CONFIGURE_DEPENDS")
+    file(GLOB_RECURSE CORE_SOURCES core/*.cpp)
+else()
+    file(GLOB_RECURSE CORE_SOURCES CONFIGURE_DEPENDS core/*.cpp)
+endif()
 
 # 核心库（命名为 youdidit）
 add_library(youdidit ${CORE_SOURCES})
